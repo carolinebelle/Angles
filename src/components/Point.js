@@ -32,7 +32,7 @@ export default class Point extends React.Component {
   };
 
   render() {
-    const { deltaPosition } = this.state;
+    // const { deltaPosition } = this.state;
     return (
       <div>
         <Draggable onDrag={this.handleDrag}>
