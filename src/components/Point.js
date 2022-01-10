@@ -5,15 +5,13 @@ import "./styles.css";
 export default class Point extends React.Component {
   constructor(props) {
     super(props);
-    console.log(
-      "point created with props: " + this.props.x + ", " + this.props.y
-    );
     this.state = {
       deltaPosition: {
         x: this.props.x,
         y: this.props.y,
       },
     };
+    this.yOffset = Math.max(50, window.innerHeight * 0.1);
   }
 
   handleDrag = (e, ui) => {

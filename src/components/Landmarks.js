@@ -18,28 +18,41 @@ export default class Landmarks extends React.Component {
   componentDidUpdate() {}
 
   onClick(e) {
-    console.log("clicked " + this.props.level);
     this.props.toggleLevel(this.props.level);
   }
 
   renderPoints = () => {
     if (this.props.points) {
       let points = [];
+      let count = 0;
       let i = 0;
-      while (i < this.props.points.length && this.props.points[i]) {
-        points.push(
-          <div
-            key={i}
-            className="pointInactive"
-            style={{
-              top: this.props.points[i][1] - 7,
-              left: this.props.points[i][0] - 7,
-            }}
-          ></div>
-        );
+      while (i < this.props.points.length) {
+        if (this.props.points[i]) {
+          points.push(
+            <div
+              key={i}
+              className="pointInactive"
+              style={{
+                top: this.props.points[i][1] - 7,
+                left: this.props.points[i][0] - 7,
+              }}
+            ></div>
+          );
+          count += 1;
+        }
         i += 1;
       }
-      return <div>{points}</div>;
+
+      if (count > 0) {
+        return (
+          <div>
+            {points}
+            {this.renderLabel()}
+          </div>
+        );
+      } else {
+        return <div>{points}</div>;
+      }
     }
   };
 
@@ -102,15 +115,12 @@ export default class Landmarks extends React.Component {
     this.props.points.forEach((point) => {
       if (point && point[0] && point[1]) {
         n += 1;
-        // console.log(point[0]);
         x += point[0];
         y += point[1];
       }
     });
     x /= n;
     y /= n;
-    // console.log("x position of label: " + x.toString());
-    // console.log("y position of label: " + y.toString());
 
     const styleObj = {
       position: "absolute",
@@ -137,7 +147,6 @@ export default class Landmarks extends React.Component {
       <div>
         {this.renderPoints()}
         {this.renderLines()}
-        {this.renderLabel()}
       </div>
     );
   }

@@ -38,7 +38,6 @@ export default class Mask extends Component {
     } else if (this.props.points.includes(undefined)) {
       return;
     } else {
-      console.log("passed mask criteria");
       let fill;
       if (this.props.active) {
         fill = "rgba(255, 0, 0, 0.15)";

@@ -15,69 +15,9 @@ import { Stage, Layer } from "react-konva";
 export default class Overlay extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      landmarks: [
-        [
-          [653, 581],
-          [683.5, 562],
-          [714, 543],
-          [731, 566],
-          [748, 589],
-          [729.5, 601.5],
-          [711, 614],
-          [682, 597.5],
-        ],
-        [
-          [744, 155],
-          [776, 174.5],
-          [808, 194],
-          [793.5, 219.5],
-          [779, 245],
-          [746.5, 230.5],
-          [718, 210],
-          [731, 182.5],
-        ],
-        [
-          [706, 224],
-          [739.5, 238.5],
-          [779, 252],
-          [766.5, 287],
-          [745, 316],
-          [713.5, 301],
-          [679, 286],
-          [692.5, 252.5],
-        ],
-        [
-          [664, 301],
-          [699.5, 311.5],
-          [735, 322],
-          [727.5, 353.5],
-          [717, 388],
-          [680, 378],
-          [647, 370],
-          [656, 334],
-        ],
-        [
-          [640, 390],
-          [675.5, 394.5],
-          [711, 399],
-          [708, 433.5],
-          [705, 468],
-          [668.5, 464],
-          [632, 460],
-          [636, 425],
-        ],
-        [
-          [627, 492],
-          [663.5, 486],
-          [700, 480],
-          [706, 507.5],
-          [712, 535],
-          [676, 544],
-          [640, 557],
-          [633.5, 522.5],
-        ],
-      ],
+      landmarks: this.props.data,
       currentLevel: -1, //default to L5
 
       anteriorLeft: true,
@@ -111,19 +51,23 @@ export default class Overlay extends React.Component {
     this.canDraw = this.canDraw.bind(this);
   }
 
+  maxPoints = 8;
+
   updateCount = 0;
 
   toggleLevel(level) {
-    let toSave = new Array(this.state.points.length); // data to save to landmarks
-    let toLoad = new Array(this.state.points.length); // data to pull from landmarks to load into startpoints
-    let newCurrent = new Array(this.state.points.length); // same as toLoad, data to pull from landmarks to load for active position tracking
+    let toSave = new Array(this.maxPoints); // data to save to landmarks
+    let toLoad = new Array(this.maxPoints); // data to pull from landmarks to load into startpoints
+    let newCurrent = new Array(this.maxPoints); // same as toLoad, data to pull from landmarks to load for active position tracking
+
+    let existingData = this.state.landmarks[level]; //does data already exist for this level?
 
     for (let i = 0; i < this.state.points.length; i++) {
       if (this.state.points[i]) {
         //creating copy of current set of points
         toSave[i] = [...this.state.points[i]];
       }
-      if (this.state.landmarks[level]) {
+      if (existingData) {
         if (this.state.landmarks[level][i]) {
           toLoad[i] = [...this.state.landmarks[level][i]];
           newCurrent[i] = [...this.state.landmarks[level][i]];
@@ -143,10 +87,14 @@ export default class Overlay extends React.Component {
           }
         }
         newLandmarks[i] = vert;
+      } else {
+        newLandmarks[i] = new Array(this.maxPoints);
       }
     }
 
-    newLandmarks[this.state.currentLevel] = toSave;
+    if (this.state.currentLevel != -1) {
+      newLandmarks[this.state.currentLevel] = toSave;
+    }
 
     if (level == this.state.currentLevel) {
       //toggle off
@@ -154,16 +102,9 @@ export default class Overlay extends React.Component {
       //set current level to -1
       this.setState({
         landmarks: newLandmarks,
-        points: new Array(this.state.points.length),
-        startPoints: new Array(this.state.points.length),
+        points: new Array(this.maxPoints),
+        startPoints: new Array(this.maxPoints),
         currentLevel: -1,
-      });
-    } else if (this.state.currentLevel == -1) {
-      //load new, do not save old
-      this.setState({
-        points: newCurrent,
-        startPoints: toLoad,
-        currentLevel: level,
       });
     } else {
       //load new, save old
@@ -175,19 +116,26 @@ export default class Overlay extends React.Component {
       });
     }
 
-    this.canDraw();
+    if (level == -1 || this.state.currentLevel == level) {
+      this.setState({ active: false, draw: false });
+    } else {
+      this.canDraw(level, toLoad);
+    }
   }
 
   anteriorSide(checked) {
     this.setState({ anteriorLeft: checked });
   }
 
-  canDraw() {
-    if (this.state.currentLevel != -1) {
+  canDraw(level, points) {
+    let currentLevel = level || level == 0 ? level : this.state.currentLevel;
+    let currentPoints = points ? points : this.state.startPoints;
+
+    if (currentLevel != -1) {
       let empty = -1;
       const order = [0, 2, 6, 4];
       order.forEach((num) => {
-        if (!this.state.startPoints) {
+        if (!currentPoints[num]) {
           //does not exist
           if (empty == -1) {
             empty = num;
@@ -205,10 +153,8 @@ export default class Overlay extends React.Component {
     } else {
       this.setState({ draw: false, active: false });
     }
-  }
 
-  componentDidUpdate() {
-    // console.log(++this.updateCount + " overlay updated");
+    this.printPoints(points);
   }
 
   getAngles() {
@@ -220,9 +166,8 @@ export default class Overlay extends React.Component {
   }
 
   //console log all points
-  printPoints = () => {
-    console.log("points stored in Overlay state");
-    console.log(JSON.stringify(this.state.points));
+  printPoints = (array) => {
+    console.log(JSON.stringify(array));
     console.log(
       "Drawing: " + this.state.draw + "/ Active: " + this.state.active
     );
@@ -230,8 +175,6 @@ export default class Overlay extends React.Component {
 
   // //call setState to re-render component after updating coordinate of one point
   updatePosition(initial, index, x, y) {
-    console.log("updating index: " + index + " at " + x + ", " + y);
-
     let iPoints = new Array(this.state.startPoints.length);
     let updatedPoints = new Array(this.state.points.length);
 
@@ -249,12 +192,10 @@ export default class Overlay extends React.Component {
       updatedPoints[index] = [x, y];
 
       this.setState({ startPoints: iPoints, points: updatedPoints });
-      console.log("state data;" + JSON.stringify(updatedPoints));
     } else {
       updatedPoints[index] = [x, y];
 
       this.setState({ points: updatedPoints });
-      console.log("state data;" + JSON.stringify(updatedPoints));
     }
   }
 
@@ -279,7 +220,6 @@ export default class Overlay extends React.Component {
       let x = element[2];
       let y = element[3];
 
-      console.log("updating index: " + index + " at " + x + ", " + y);
       if (initial) {
         //add to startPoints and points
         iPoints[index] = [x, y];
@@ -291,9 +231,6 @@ export default class Overlay extends React.Component {
     });
 
     this.setState({ startPoints: iPoints, points: updatedPoints });
-    console.log("state data;" + JSON.stringify(updatedPoints));
-
-    // this.printPoints();
   }
 
   renderPoints = () => {
@@ -311,7 +248,6 @@ export default class Overlay extends React.Component {
   };
 
   onClick(e) {
-    console.log("onClick: " + e.clientX + ", " + e.clientY);
     if (this.state.draw) {
       if (this.state.active) {
         //second point of line

@@ -12,7 +12,6 @@ export default class Mask extends Component {
   }
 
   onClick() {
-    console.log(this.props.level + " clicked");
     this.setState({ active: !this.state.active });
     this.props.toggleLevel(this.props.index);
   }
