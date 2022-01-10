@@ -9,6 +9,7 @@
   height: 100%;
   left: 0;
   top: 0;
+  user-select: none;
 }
 
 .Header {
@@ -25,8 +26,9 @@
   height: 10vh;
   min-height: 50px;
   padding: 0;
-  z-index: 5;
+  z-index: 10;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.7);
+  user-select: none;
 }
 
 .Content {
@@ -79,7 +81,22 @@
   left: 0;
   z-index: 9;
 }
-
+.Overlay.drag {
+  cursor: crosshair !important;
+  user-select: none;
+}
+.rightPanel {
+  user-select: none;
+  flex-direction: column;
+  display: flex;
+  justify-content: space-around;
+  position: fixed;
+  right: 2vw;
+  bottom: 20vh;
+  width: 5vw;
+  height: 50vh;
+  z-index: 10;
+}
 button {
   flex: 1;
   height: auto;
@@ -98,12 +115,62 @@ button:active {
   border: 2px solid rgba(52, 51, 59, 0.541);
   background-color: rgba(52, 51, 59, 0.226);
 }
+.buttonLevel {
+  flex: 1;
+  position: relative;
+  height: auto;
+  background-color: transparent;
+  border: 2px solid rgb(167, 167, 167);
+  color: #fff;
+  text-align: center;
+  box-shadow: 2px 2px 3px #999;
+  z-index: 11;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  cursor: pointer;
+  margin: 2px;
+}
+.buttonLevelSelected {
+  flex: 1;
+  position: relative;
+  height: auto;
+  background-color: rgb(154, 151, 173);
+  border: 2px solid rgb(154, 151, 173);
+  color: black;
+  text-align: center;
+  box-shadow: 2px 2px 3px #999;
+  z-index: 11;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  cursor: pointer;
+  margin: 2px;
+}
+.buttonLevelSelected:hover {
+  background-color: rgba(154, 151, 173, 0.75);
+  border: 2px solid rgb(154, 151, 173);
+}
+.buttonLevelSelected:active {
+  border: 2px solid rgba(52, 51, 59, 0.541);
+  background-color: rgba(52, 51, 59, 0.226);
+}
+.buttonLevel:hover {
+  background-color: rgb(154, 151, 173, 0.25);
+  border: 2px solid rgb(154, 151, 173);
+}
+.buttonLevel:active {
+  border: 2px solid rgba(52, 51, 59, 0.541);
+  background-color: rgba(52, 51, 59, 0.226);
+}
 .reset {
   position: fixed;
   width: 60px;
   height: 60px;
   bottom: 5%;
-  right: 20px;
+  right: 2vw;
   background-color: rgb(154, 151, 173);
   color: #fff;
   border-radius: 50px;
@@ -124,22 +191,21 @@ button:active {
   position: fixed;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
   z-index: 3;
   border: 2px solid red;
-  cursor: move;
-  cursor: grab;
-  cursor: -moz-grab;
-  cursor: -webkit-grab;
+  cursor: crosshair;
+  user-select: none;
 }
-.point:active {
-  cursor: grabbing;
-  cursor: -moz-grabbing;
-  cursor: -webkit-grabbing;
+.point.drag {
+  cursor: none !important;
+  user-select: none;
 }
-.react-draggable,
-.cursor {
-  cursor: move;
+.pointInactive {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  z-index: 3;
+  border: 2px solid blue;
 }
 .switch {
   position: fixed;
@@ -151,4 +217,8 @@ button:active {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.line {
+  pointer-events: none;
+  opacity: 0.5;
 }

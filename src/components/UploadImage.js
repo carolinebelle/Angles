@@ -111,7 +111,12 @@ const UploadWithProgressPreview = () => {
               previewComponentProps={getPreviewProps}
               PreviewComponent={CustomImagePreview}
             />
-            <Overlay key={itemNum} points={new Array(6)} />
+            <Overlay
+              key={itemNum}
+              data={new Array(6)}
+              landmarks={new Array(6)}
+              points={new Array(8)}
+            />
           </PreviewContainer>
         </PasteUploadDropZone>
       </div>
