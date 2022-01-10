@@ -504,7 +504,7 @@ export default class Overlay extends React.Component {
             <Switch
               onChange={this.anteriorSide}
               checked={this.state.anteriorLeft}
-              onColor="#9A97AD"
+              onColor="#809be6"
               offColor="#000000"
             />
             <div>Anterior on Left?</div>
