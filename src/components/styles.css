@@ -9,7 +9,6 @@
   height: 100%;
   left: 0;
   top: 0;
-  user-select: none;
 }
 
 .Header {
@@ -36,6 +35,7 @@
   width: 100vw;
   top: 10vh;
   height: 90vh;
+  color: white;
 }
 
 .TitleBox {
@@ -128,7 +128,7 @@ button:active {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 22px;
+  font-size: auto;
   cursor: pointer;
   margin: 2px;
 }
@@ -145,8 +145,9 @@ button:active {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 22px;
+  font-size: auto;
   cursor: pointer;
+  font-weight: bolder;
   margin: 2px;
 }
 .buttonLevelSelected:hover {
