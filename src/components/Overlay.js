@@ -2,372 +2,567 @@ import React from "react";
 import "./styles.css";
 import { Line } from "react-lineto";
 import Point from "./Point";
+import Landmarks from "./Landmarks";
 import CopyText from "./CopyText";
 import Switch from "react-switch";
+import Mask from "./Mask";
+import LevelButton from "./LevelButton";
+import { Stage, Layer } from "react-konva";
 
 //TODO: selectively delete points and lines
-//TODO: determine if adjusting existing point vs. adding new point
-//TODO: point or line changes color when selected
 //TODO: points should be stuck to image even when resizing page
 
 export default class Overlay extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      numPoints: 0,
+      landmarks: [
+        [
+          [653, 581],
+          [683.5, 562],
+          [714, 543],
+          [731, 566],
+          [748, 589],
+          [729.5, 601.5],
+          [711, 614],
+          [682, 597.5],
+        ],
+        [
+          [744, 155],
+          [776, 174.5],
+          [808, 194],
+          [793.5, 219.5],
+          [779, 245],
+          [746.5, 230.5],
+          [718, 210],
+          [731, 182.5],
+        ],
+        [
+          [706, 224],
+          [739.5, 238.5],
+          [779, 252],
+          [766.5, 287],
+          [745, 316],
+          [713.5, 301],
+          [679, 286],
+          [692.5, 252.5],
+        ],
+        [
+          [664, 301],
+          [699.5, 311.5],
+          [735, 322],
+          [727.5, 353.5],
+          [717, 388],
+          [680, 378],
+          [647, 370],
+          [656, 334],
+        ],
+        [
+          [640, 390],
+          [675.5, 394.5],
+          [711, 399],
+          [708, 433.5],
+          [705, 468],
+          [668.5, 464],
+          [632, 460],
+          [636, 425],
+        ],
+        [
+          [627, 492],
+          [663.5, 486],
+          [700, 480],
+          [706, 507.5],
+          [712, 535],
+          [676, 544],
+          [640, 557],
+          [633.5, 522.5],
+        ],
+      ],
+      currentLevel: -1, //default to L5
+
       anteriorLeft: true,
-      vertebra: this.props.vertebra,
-      currentlyEditing: 5, //default to editing L5 first for now
-      mousePos: null
+
+      draw: false, //can the user draw another point, displays grey square under cursor
+      active: false, //is the user actively drawing a line, displays red square
+      mouseX: null,
+      mouseY: null,
+
+      points: new Array(8),
+      startPoints: new Array(8),
     };
+
+    this.lineBorderWidth = 2;
+
+    this.onClick = this.onClick.bind(this);
+
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.anteriorSide = this.anteriorSide.bind(this);
+    this.activeDraw = this.activeDraw.bind(this);
+    this.renderLines = this.renderLines.bind(this);
+
     this.printPoints = this.printPoints.bind(this);
     this.updatePosition = this.updatePosition.bind(this);
     this.renderPoints = this.renderPoints.bind(this);
-    // this.onClick = this.onClick.bind(this);
-    this.onMouseDown = this.onMouseDown.bind(this);
-    this.onMouseUp = this.onMouseUp.bind(this);
-    // this.renderLumbar = this.renderLumbar.bind(this);
-    // this.renderS = this.renderS.bind(this);
-    // this.renderPTVertical = this.renderPTVertical.bind(this);
-    // this.renderFemToS = this.renderFemToS.bind(this);
-    // this.getAngles = this.getAngles.bind(this);
-    this.anteriorSide = this.anteriorSide.bind(this);
+
+    this.renderLandmarks = this.renderLandmarks.bind(this);
+    this.renderMasks = this.renderMasks.bind(this);
+
+    this.toggleLevel = this.toggleLevel.bind(this);
+    this.canDraw = this.canDraw.bind(this);
   }
-  isDown = false; //determines mouse state
+
+  updateCount = 0;
+
+  toggleLevel(level) {
+    let toSave = new Array(this.state.points.length); // data to save to landmarks
+    let toLoad = new Array(this.state.points.length); // data to pull from landmarks to load into startpoints
+    let newCurrent = new Array(this.state.points.length); // same as toLoad, data to pull from landmarks to load for active position tracking
+
+    for (let i = 0; i < this.state.points.length; i++) {
+      if (this.state.points[i]) {
+        //creating copy of current set of points
+        toSave[i] = [...this.state.points[i]];
+      }
+      if (this.state.landmarks[level]) {
+        if (this.state.landmarks[level][i]) {
+          toLoad[i] = [...this.state.landmarks[level][i]];
+          newCurrent[i] = [...this.state.landmarks[level][i]];
+        }
+      }
+    }
+
+    let newLandmarks = new Array(this.state.landmarks.length);
+
+    //copy landmarks
+    for (let i = 0; i < newLandmarks.length; i++) {
+      if (this.state.landmarks[i]) {
+        let vert = new Array(this.state.landmarks[i].length);
+        for (let j = 0; j < this.state.landmarks[i].length; j++) {
+          if (this.state.landmarks[i][j]) {
+            vert[j] = [...this.state.landmarks[i][j]];
+          }
+        }
+        newLandmarks[i] = vert;
+      }
+    }
+
+    newLandmarks[this.state.currentLevel] = toSave;
+
+    if (level == this.state.currentLevel) {
+      //toggle off
+      //do not load new, save old
+      //set current level to -1
+      this.setState({
+        landmarks: newLandmarks,
+        points: new Array(this.state.points.length),
+        startPoints: new Array(this.state.points.length),
+        currentLevel: -1,
+      });
+    } else if (this.state.currentLevel == -1) {
+      //load new, do not save old
+      this.setState({
+        points: newCurrent,
+        startPoints: toLoad,
+        currentLevel: level,
+      });
+    } else {
+      //load new, save old
+      this.setState({
+        landmarks: newLandmarks,
+        points: newCurrent,
+        startPoints: toLoad,
+        currentLevel: level,
+      });
+    }
+
+    this.canDraw();
+  }
 
   anteriorSide(checked) {
     this.setState({ anteriorLeft: checked });
   }
 
-  updateCount = 0;
+  canDraw() {
+    if (this.state.currentLevel != -1) {
+      let empty = -1;
+      const order = [0, 2, 6, 4];
+      order.forEach((num) => {
+        if (!this.state.startPoints) {
+          //does not exist
+          if (empty == -1) {
+            empty = num;
+          }
+        }
+      });
+
+      if (empty == 0 || empty == 6) {
+        this.setState({ draw: true, active: false });
+      } else if (empty == 2 || empty == 4) {
+        this.setState({ draw: true, active: true });
+      } else {
+        this.setState({ draw: false, active: false });
+      }
+    } else {
+      this.setState({ draw: false, active: false });
+    }
+  }
 
   componentDidUpdate() {
-    // Typical usage (don't forget to compare props):
-    console.log(++this.updateCount + " overlay updated");
-    //this.printPoints();
+    // console.log(++this.updateCount + " overlay updated");
   }
 
-  // getAngles() {
-  //   let ll = null;
-  //   let pi = null;
-  //   let pt = null;
+  getAngles() {
+    let ll = null;
+    let pi = null;
+    let pt = null;
 
-  //   if (this.state.points[2] && this.state.points[3]) {
-  //     if (this.state.points[0] && this.state.points[1]) {
-  //       //calculate angle LL
-  //       let xSLeft;
-  //       let ySLeft;
-  //       let xSRight;
-  //       let ySRight;
-  //       let xLLeft;
-  //       let yLLeft;
-  //       let xLRight;
-  //       let yLRight;
-  //       if (this.state.points[2][0] < this.state.points[3][0]) {
-  //         xSLeft = this.state.points[2][0];
-  //         ySLeft = this.state.points[2][1];
-  //         xSRight = this.state.points[3][0];
-  //         ySRight = this.state.points[3][1];
-  //       } else {
-  //         xSRight = this.state.points[2][0];
-  //         ySRight = this.state.points[2][1];
-  //         xSLeft = this.state.points[3][0];
-  //         ySLeft = this.state.points[3][1];
-  //       }
-  //       if (this.state.points[0][0] < this.state.points[1][0]) {
-  //         xLLeft = this.state.points[0][0];
-  //         yLLeft = this.state.points[0][1];
-  //         xLRight = this.state.points[1][0];
-  //         yLRight = this.state.points[1][1];
-  //       } else {
-  //         xLRight = this.state.points[0][0];
-  //         yLRight = this.state.points[0][1];
-  //         xLLeft = this.state.points[1][0];
-  //         yLLeft = this.state.points[1][1];
-  //       }
-
-  //       let alpha0 = Math.atan2(yLRight - yLLeft, xLRight - xLLeft);
-  //       let alpha1 = Math.atan2(ySRight - ySLeft, xSRight - xSLeft);
-  //       if (this.state.anteriorLeft) {
-  //         ll = Math.round(((alpha0 - alpha1) * 180) / Math.PI);
-  //       } else {
-  //         ll = -Math.round(((alpha0 - alpha1) * 180) / Math.PI);
-  //       }
-  //     }
-  //   }
-
-  //   if (this.state.points[2] && this.state.points[3]) {
-  //     if (this.state.points[4] && this.state.points[5]) {
-  //       //calculate angle PI
-  //       let x0 = (this.state.points[2][0] + this.state.points[3][0]) / 2; //x of midpoint between points 2 and 3
-  //       let y0 = (this.state.points[2][1] + this.state.points[3][1]) / 2;
-  //       let x1 = (this.state.points[4][0] + this.state.points[5][0]) / 2; //x of midpoint between femoral head centerss
-  //       let y1 = (this.state.points[4][1] + this.state.points[5][1]) / 2;
-  //       let rise = this.state.points[3][1] - this.state.points[2][1];
-  //       let run = this.state.points[3][0] - this.state.points[2][0];
-  //       if (run < 0) {
-  //         rise = this.state.points[2][1] - this.state.points[3][1];
-  //         run = this.state.points[2][0] - this.state.points[3][0];
-  //       }
-  //       let x2 = x0 - 3 * rise;
-  //       let y2 = y0 + 3 * run;
-
-  //       // let alpha0 = Math.atan2(y0 - y1, x0 - x1); //line from femoral head midpoint to sacral midpoint
-  //       let alpha1 = Math.atan2(Math.abs(y0 - y2), Math.abs(x0 - x2)); //perpendicular bisect of sacral line
-  //       let alpha3 = Math.atan2(Math.abs(y1 - y0), Math.abs(x1 - x0)); //line from femoral head midpoint to sacral midpoint
-  //       pi = 180 - Math.round(((alpha3 + alpha1) * 180) / Math.PI);
-  //       pt = 90 - Math.round((alpha3 * 180) / Math.PI);
-  //     }
-  //   }
-  //   return <CopyText LL={ll} PI={pi} PT={pt} />;
-  // }
-
-  // onClick(e) {
-  //   console.log("Overlay mouse click location " + e.clientX + ", " + e.clientY);
-  //   console.log(this.state.points.toString());
-  //   let index = 0;
-  //   let empty = false;
-  //   while (!empty && index < this.state.startPoints.length) {
-  //     if (!this.state.startPoints[index]) empty = true;
-  //     else index++;
-  //   }
-  //   if (empty) {
-  //     console.log(
-  //       "adding point " + index + " at " + e.clientX + ", " + e.clientY
-  //     );
-  //     this.updatePosition(true, index, e.clientX, e.clientY);
-  //   }
-  // }
-
-  onMouseDown(e) {
-    console.log("Mouse down!");
-    isDown = true;
-
-    let level = this.state.currentlyEditing; //index of vertebra array we are editing
-    let landmarks = this.state.vertebra[level]; //array len=8 representing landmarks of level
-
-    console.log("Overlay drag start location " + e.clientX + ", " + e.clientY);
-
-    //guarantee landmarks is not null
-    if (!landmarks) {
-      landmarks = Array.apply(null, Array(8)).map(function () {}); //iterable array of length 16
-    }
-
-    let deepCopy = JSON.parse(JSON.stringify(landmarks));
-
-    console.log("start: " + landmarks.toString()); //starting point
-
-    if (landmarks[0]) {
-      if (landmarks[6]) {
-        console.log("both endplates already drawn... no change");
-        //both endplates already drawn
-        return;
-      } else {
-        deepCopy[6] = [e.clientX, e.clientY];
-        deepCopy[4] = [e.clientX, e.clientY];
-      }
-    } else {
-      deepCopy[0] = [e.clientX, e.clientY];
-      deepCopy[] = [e.clientX, e.clientY];
-    }
-    console.log("end: " + deepCopy.toString()); //ending point
-
-    let vertebra = JSON.parse(JSON.stringify(this.state.vertebra));
-    vertebra[level] = deepCopy;
-    this.setState({ vertebra });
-  }
-
-  onMouseUp(e) {
-    console.log("Mouse up!");
-    isDown = false;
-
-    let level = this.state.currentlyEditing; //index of vertebra array we are editing
-    let landmarks = this.state.vertebra[level]; //array len=8 representing landmarks of level
-
-    console.log("Overlay drag stop location " + e.clientX + ", " + e.clientY);
-
-    //guarantee landmarks is not null
-    if (!landmarks) {
-      landmarks = Array.apply(null, Array(8)).map(function () {}); //iterable array of length 16
-    }
-
-    let deepCopy = JSON.parse(JSON.stringify(landmarks));
-
-    console.log("start: " + landmarks.toString()); //starting point
-
-    if (landmarks[2]) {
-      if (landmarks[4]) {
-        console.log("both endplates already drawn... no change");
-        //both endplates already drawn
-        return;
-      } else {
-        deepCopy[4] = [e.clientX, e.clientY];
-      }
-    } else {
-      deepCopy[2] = [e.clientX, e.clientY];
-    }
-    console.log("end: " + deepCopy.toString()); //ending point
-
-    let vertebra = JSON.parse(JSON.stringify(this.state.vertebra));
-    vertebra[level] = deepCopy;
-    this.setState({ vertebra });
-  }
-
-  onMouseMove(e) {
-    if (!isDown) {
-      return;
-    }
-    redrawStoredLines();
-    var mouseX = parseInt(e.clientX - offsetX);
-    var mouseY = parseInt(e.clientY - offsetY);
-    // draw the current line
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(mouseX, mouseY);
-    ctx.stroke();
+    return <CopyText LL={ll} PI={pi} PT={pt} />;
   }
 
   //console log all points
   printPoints = () => {
     console.log("points stored in Overlay state");
-    this.state.vertebra.map((item) => {
-      if (item) {
-        item.map((point) => {
-          console.log(point);
-        });
-      }
-    });
+    console.log(JSON.stringify(this.state.points));
+    console.log(
+      "Drawing: " + this.state.draw + "/ Active: " + this.state.active
+    );
   };
 
   // //call setState to re-render component after updating coordinate of one point
   updatePosition(initial, index, x, y) {
-    if (initial) {
-      let iPoints = JSON.parse(JSON.stringify(this.state.vertebra));
-      iPoints[index] = [x, y];
-      this.setState({ vertebra: iPoints });
-    }
-    let updatedPoints = new Array(this.state.vertebra.length);
+    console.log("updating index: " + index + " at " + x + ", " + y);
 
-    for (let i = 0; i < this.state.points.length; i++)
-      if (this.state.points[i]) {
-        updatedPoints[i] = { ...this.state.points[i] };
+    let iPoints = new Array(this.state.startPoints.length);
+    let updatedPoints = new Array(this.state.points.length);
+
+    for (let i = 0; i < this.state.startPoints.length; i++) {
+      if (this.state.startPoints[i]) {
+        iPoints[i] = [...this.state.startPoints[i]];
       }
+      if (this.state.points[i]) {
+        updatedPoints[i] = [...this.state.points[i]];
+      }
+    }
 
-    updatedPoints[index] = [x, y];
+    if (initial) {
+      iPoints[index] = [x, y];
+      updatedPoints[index] = [x, y];
 
-    this.setState({ points: updatedPoints });
+      this.setState({ startPoints: iPoints, points: updatedPoints });
+      console.log("state data;" + JSON.stringify(updatedPoints));
+    } else {
+      updatedPoints[index] = [x, y];
+
+      this.setState({ points: updatedPoints });
+      console.log("state data;" + JSON.stringify(updatedPoints));
+    }
+  }
+
+  updateManyPositions(updates) {
+    //deep copy of points and startPoints
+    let iPoints = new Array(this.state.startPoints.length);
+    let updatedPoints = new Array(this.state.points.length);
+
+    for (let i = 0; i < this.state.startPoints.length; i++) {
+      if (this.state.startPoints[i]) {
+        iPoints[i] = [...this.state.startPoints[i]];
+      }
+      if (this.state.points[i]) {
+        updatedPoints[i] = [...this.state.points[i]];
+      }
+    }
+
+    updates.forEach((element) => {
+      //[initial, index, x, y]
+      let initial = element[0];
+      let index = element[1];
+      let x = element[2];
+      let y = element[3];
+
+      console.log("updating index: " + index + " at " + x + ", " + y);
+      if (initial) {
+        //add to startPoints and points
+        iPoints[index] = [x, y];
+        updatedPoints[index] = [x, y];
+      } else {
+        // only add to points
+        updatedPoints[index] = [x, y];
+      }
+    });
+
+    this.setState({ startPoints: iPoints, points: updatedPoints });
+    console.log("state data;" + JSON.stringify(updatedPoints));
+
+    // this.printPoints();
   }
 
   renderPoints = () => {
-    console.log("rendering points");
-    return this.state.vertebra.map((level, index) => {
-      if (level) {
-        return level.map((point, index) => {
-          if (point) {
-            return (
-              <Point
-                key={index}
-                x={point[0]}
-                y={point[1]}
-                updatePos={this.updatePosition}
-                index={index}
-              />
-            );
-          }
-        });
-      }
+    return this.state.startPoints.map((point, index) => {
+      return (
+        <Point
+          key={index.toString() + this.state.currentLevel.toString()}
+          x={point[0]}
+          y={point[1]}
+          updatePos={this.updatePosition}
+          index={index}
+        />
+      );
     });
   };
 
-  // renderLumbar = () => {
-  //   // console.log("attempting to draw lumbar disc line");
-  //   if (this.state.points[0] && this.state.points[1]) {
-  //     let x0 = this.state.points[0][0];
-  //     let y0 = this.state.points[0][1];
-  //     let x1 = this.state.points[1][0];
-  //     let y1 = this.state.points[1][1];
-  //     return <Line x0={x0} y0={y0} x1={x1} y1={y1} zIndex={3} />;
-  //   }
-  // };
+  onClick(e) {
+    console.log("onClick: " + e.clientX + ", " + e.clientY);
+    if (this.state.draw) {
+      if (this.state.active) {
+        //second point of line
+        let index;
 
-  // renderS = () => {
-  //   // console.log("attempting to draw sacral line");
-  //   if (this.state.points[2] && this.state.points[3]) {
-  //     let xm = (this.state.points[2][0] + this.state.points[3][0]) / 2;
-  //     let ym = (this.state.points[2][1] + this.state.points[3][1]) / 2;
-  //     let rise = this.state.points[3][1] - this.state.points[2][1];
-  //     let run = this.state.points[3][0] - this.state.points[2][0];
-  //     if (run < 0) {
-  //       rise = this.state.points[2][1] - this.state.points[3][1];
-  //       run = this.state.points[2][0] - this.state.points[3][0];
-  //     }
+        if (!this.state.startPoints[2]) index = 2;
+        else if (!this.state.startPoints[4]) index = 4;
+        else index = -1; //no empty slot
 
-  //     return (
-  //       <div>
-  //         <Line
-  //           x0={this.state.points[2][0]}
-  //           y0={this.state.points[2][1]}
-  //           x1={this.state.points[3][0]}
-  //           y1={this.state.points[3][1]}
-  //           zIndex={3}
-  //         />
-  //         <Line
-  //           x0={xm}
-  //           y0={ym}
-  //           x1={xm - 3 * rise}
-  //           y1={ym + 3 * run}
-  //           zIndex={3}
-  //         />
-  //       </div>
-  //     );
-  //   }
-  // };
+        if (index == 2) {
+          let mx = (this.state.points[0][0] + e.clientX) / 2;
+          let my = (this.state.points[0][1] + e.clientY) / 2;
+          let midpoint = [true, 1, mx, my];
+          let endpoint = [true, 2, e.clientX, e.clientY];
+          this.updateManyPositions([midpoint, endpoint]);
+          this.setState({ active: false }); //no longer actively drawing a line segment
+        } else if (index == 4) {
+          let mx = (this.state.points[6][0] + e.clientX) / 2;
+          let my = (this.state.points[6][1] + e.clientY) / 2;
+          let midpoint = [true, 5, mx, my];
+          let endpoint = [true, 4, e.clientX, e.clientY];
 
-  // renderPTVertical = () => {
-  //   // console.log("attempting to draw vertical from femoral head midpoint");
-  //   if (this.state.points[4] && this.state.points[5]) {
-  //     let x = (this.state.points[4][0] + this.state.points[5][0]) / 2;
-  //     let y = (this.state.points[4][1] + this.state.points[5][1]) / 2;
-  //     return <Line x0={x} y0={y} x1={x} y1={Math.max(y - 300, 0)} zIndex={3} />;
-  //   }
-  // };
+          let addPoints = [midpoint, endpoint];
 
-  // renderFemToS = () => {
-  //   // console.log(
-  //   //   "attempting to draw line from femoral head midpoint to sacrum midpoint"
-  //   // );
-  //   if (
-  //     this.state.points[2] &&
-  //     this.state.points[3] &&
-  //     this.state.points[4] &&
-  //     this.state.points[5]
-  //   ) {
-  //     let x = (this.state.points[2][0] + this.state.points[3][0]) / 2;
-  //     let y = (this.state.points[2][1] + this.state.points[3][1]) / 2;
-  //     let x2 = (this.state.points[4][0] + this.state.points[5][0]) / 2;
-  //     let y2 = (this.state.points[4][1] + this.state.points[5][1]) / 2;
-  //     return <Line x0={x} y0={y} x1={x2} y1={y2} zIndex={3} />;
-  //   }
-  // };
+          //add vertical midpoints
+          if (
+            //all other corners present
+            this.state.startPoints[0] &&
+            this.state.startPoints[2] &&
+            this.state.startPoints[6]
+          ) {
+            if (!this.state.startPoints[3]) {
+              //midpoint not already added
+              let mx = (this.state.points[2][0] + e.clientX) / 2;
+              let my = (this.state.points[2][1] + e.clientY) / 2;
+              addPoints.push([true, 3, mx, my]);
+            }
+            if (!this.state.startPoints[7]) {
+              //midpoint not already added
+              let mx = (this.state.points[0][0] + this.state.points[6][0]) / 2;
+              let my = (this.state.points[0][1] + this.state.points[6][1]) / 2;
+              addPoints.push([true, 7, mx, my]);
+            }
+          }
+          this.updateManyPositions(addPoints);
+          this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
+        } else {
+          this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
+        }
+      } else {
+        //first point of line
+        let index;
+
+        if (!this.state.startPoints[0]) index = 0;
+        else if (!this.state.startPoints[6]) index = 6;
+        else index = -1; //no empty slot
+
+        if (index != -1) {
+          this.updatePosition(true, index, e.clientX, e.clientY); //added a point
+          this.setState({ active: true }); //actively drawing a line segment
+        }
+      }
+    }
+  }
+
+  onMouseMove(e) {
+    if (this.state.draw) {
+      this.setState({
+        mouseX: e.clientX,
+        mouseY: e.clientY,
+      });
+    }
+  }
+
+  renderLines = () => {
+    let lines = [];
+    let x0;
+    let y0;
+    let x1;
+    let y1;
+    let a = 0;
+    let b = 1;
+    while (b < this.state.points.length) {
+      if (this.state.points[a] && this.state.points[b]) {
+        x0 = this.state.points[a][0];
+        y0 = this.state.points[a][1];
+        x1 = this.state.points[b][0];
+        y1 = this.state.points[b][1];
+        lines.push(
+          <Line
+            key={a}
+            x0={x0}
+            y0={y0}
+            x1={x1}
+            y1={y1}
+            className="line"
+            borderWidth={this.lineBorderWidth}
+          />
+        );
+      }
+      a += 1;
+      b += 1;
+    }
+    if (this.state.points[a] && this.state.points[0]) {
+      x0 = this.state.points[a][0];
+      y0 = this.state.points[a][1];
+      x1 = this.state.points[0][0];
+      y1 = this.state.points[0][1];
+      lines.push(
+        <Line
+          key={a}
+          x0={x0}
+          y0={y0}
+          x1={x1}
+          y1={y1}
+          className="line"
+          borderWidth={this.lineBorderWidth}
+        />
+      );
+    }
+
+    return <div>{lines}</div>;
+  };
+
+  activeLine = () => {
+    if (this.state.active && this.state.mouseX && this.state.mouseY) {
+      let x0;
+      let y0;
+      let x1;
+      let y1;
+      if (!this.state.points[2] && this.state.points[0]) {
+        x0 = this.state.points[0][0];
+        y0 = this.state.points[0][1];
+        x1 = this.state.mouseX;
+        y1 = this.state.mouseY;
+      } else if (!this.state.points[4] && this.state.points[6]) {
+        x0 = this.state.points[6][0];
+        y0 = this.state.points[6][1];
+        x1 = this.state.mouseX;
+        y1 = this.state.mouseY;
+      }
+      return (
+        <Line
+          x0={x0}
+          y0={y0}
+          x1={x1}
+          y1={y1}
+          className="line"
+          borderWidth={this.lineBorderWidth}
+        />
+      );
+    }
+  };
+
+  renderLandmarks = () => {
+    if (this.state.landmarks) {
+      let vertebra = [];
+      let i = 0;
+      while (i < this.state.landmarks.length) {
+        if (i != this.state.currentLevel && this.state.landmarks[i]) {
+          vertebra.push(
+            <Landmarks
+              key={i}
+              points={this.state.landmarks[i]}
+              toggleLevel={this.toggleLevel}
+              level={i}
+            />
+          );
+        }
+        i += 1;
+      }
+      return <div>{vertebra}</div>;
+    }
+  };
+
+  renderMasks = () => {
+    if (this.state.landmarks) {
+      let vertebra = [];
+      let i = 0;
+      while (i < this.state.landmarks.length) {
+        if (i != this.state.currentLevel && this.state.landmarks[i]) {
+          vertebra.push(
+            <Mask key={i} points={this.state.landmarks[i]} active={false} />
+          );
+        }
+        i += 1;
+      }
+      return <>{vertebra}</>;
+    }
+  };
+
+  activeDraw = () => {
+    if (this.state.draw) {
+      if (this.state.mouseX && this.state.mouseY) {
+        if (this.state.active) {
+          return (
+            <div
+              className="point"
+              style={{
+                top: this.state.mouseY - 6.5,
+                left: this.state.mouseX - 7.5,
+                border: "2px solid red",
+              }}
+            />
+          );
+        } else {
+          return (
+            <div
+              className="point"
+              style={{
+                top: this.state.mouseY - 6.5,
+                left: this.state.mouseX - 7.5,
+                border: "2px solid grey",
+              }}
+            />
+          );
+        }
+      }
+    }
+  };
 
   render() {
     return (
       <div>
         <div
-          // onClick={this.onClick}
-          onMouseDown={this.onMouseDown}
-          onMouseUp={this.onMouseUp}
+          onClick={this.onClick}
+          onMouseMove={this.onMouseMove}
           className="Overlay"
         >
-          {
-            this.renderPoints()
-            /*{this.renderLumbar()}
-          {this.renderS()}
-          {this.renderPTVertical()}
-          {this.renderFemToS()} */
-          }
+          {this.renderPoints()}
+          {this.activeDraw()}
+          {this.activeLine()}
+          {this.renderLines()}
+          {this.renderLandmarks()}
+          <Stage
+            width={window.innerWidth}
+            height={window.innerHeight}
+            x={0}
+            y={0}
+          >
+            <Layer>
+              <Mask
+                key={new Date().getTime()}
+                points={this.state.points}
+                active={true}
+              />
+              {this.renderMasks()}
+            </Layer>
+          </Stage>
         </div>
-        {/* <div>{this.getAngles()}</div> */}
+        <div>{this.getAngles()}</div>
         <div className="switch">
           <label>
             <Switch
@@ -378,6 +573,44 @@ export default class Overlay extends React.Component {
             />
             <div>Anterior on Left?</div>
           </label>
+        </div>
+        <div className="rightPanel">
+          <LevelButton
+            index={1}
+            level={"L1"}
+            active={1 == this.state.currentLevel ? true : false}
+            toggleLevel={this.toggleLevel}
+          />
+          <LevelButton
+            index={2}
+            level={"L2"}
+            active={2 == this.state.currentLevel ? true : false}
+            toggleLevel={this.toggleLevel}
+          />
+          <LevelButton
+            index={3}
+            level={"L3"}
+            active={3 == this.state.currentLevel ? true : false}
+            toggleLevel={this.toggleLevel}
+          />
+          <LevelButton
+            index={4}
+            level={"L4"}
+            active={4 == this.state.currentLevel ? true : false}
+            toggleLevel={this.toggleLevel}
+          />
+          <LevelButton
+            index={5}
+            level={"L5"}
+            active={5 == this.state.currentLevel ? true : false}
+            toggleLevel={this.toggleLevel}
+          />
+          <LevelButton
+            index={0}
+            level={"S1"}
+            active={0 == this.state.currentLevel ? true : false}
+            toggleLevel={this.toggleLevel}
+          />
         </div>
       </div>
     );

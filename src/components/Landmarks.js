@@ -1,52 +1,143 @@
 // TODO: Creates 8 landmarks, must be able to receive positions and export positions
 
 import React from "react";
-import Draggable from "react-draggable";
 import "./styles.css";
-import Point from "./Point";
+import { Line } from "react-lineto";
 
 export default class Landmarks extends React.Component {
   constructor(props) {
     super(props);
-    console.log("point created with props: " + props);
-    this.state = {
-      deltaPosition: {
-        x: this.props.x,
-        y: this.props.y,
-      },
-    };
+    this.renderPoints = this.renderPoints.bind(this);
+    this.onClick = this.onClick.bind(this);
+    this.renderLines = this.renderLines.bind(this);
+    this.renderLabel = this.renderLabel.bind(this);
+
+    this.yOffset = Math.max(50, window.innerHeight * 0.1);
   }
 
-  handleDrag = (e, ui) => {
-    const { x, y } = this.state.deltaPosition;
-    this.setState({
-      deltaPosition: {
-        x: x + ui.deltaX,
-        y: y + ui.deltaY,
-      },
-    });
+  componentDidUpdate() {}
 
-    this.props.updatePos(
-      false,
-      this.props.index,
-      this.state.deltaPosition.x,
-      this.state.deltaPosition.y
+  onClick(e) {
+    console.log("clicked " + this.props.level);
+    this.props.toggleLevel(this.props.level);
+  }
+
+  renderPoints = () => {
+    if (this.props.points) {
+      let points = [];
+      let i = 0;
+      while (i < this.props.points.length && this.props.points[i]) {
+        points.push(
+          <div
+            key={i}
+            className="pointInactive"
+            style={{
+              top: this.props.points[i][1] - 7,
+              left: this.props.points[i][0] - 7,
+            }}
+          ></div>
+        );
+        i += 1;
+      }
+      return <div>{points}</div>;
+    }
+  };
+
+  renderLines = () => {
+    let lines = [];
+    let x0;
+    let y0;
+    let x1;
+    let y1;
+    let a = 0;
+    let b = 1;
+    while (b < this.props.points.length) {
+      if (this.props.points[a] && this.props.points[b]) {
+        x0 = this.props.points[a][0];
+        y0 = this.props.points[a][1];
+        x1 = this.props.points[b][0];
+        y1 = this.props.points[b][1];
+        lines.push(
+          <Line
+            key={a}
+            x0={x0}
+            y0={y0}
+            x1={x1}
+            y1={y1}
+            className="line"
+            borderWidth={2}
+            borderColor={"blue"}
+          />
+        );
+      }
+      a += 1;
+      b += 1;
+    }
+    if (this.props.points[a] && this.props.points[0]) {
+      x0 = this.props.points[a][0];
+      y0 = this.props.points[a][1];
+      x1 = this.props.points[0][0];
+      y1 = this.props.points[0][1];
+      lines.push(
+        <Line
+          key={a}
+          x0={x0}
+          y0={y0}
+          x1={x1}
+          y1={y1}
+          className="line"
+          borderWidth={2}
+          borderColor={"blue"}
+        />
+      );
+    }
+
+    return <div>{lines}</div>;
+  };
+
+  renderLabel = () => {
+    let x = 0;
+    let y = 0;
+    let n = 0;
+    this.props.points.forEach((point) => {
+      if (point && point[0] && point[1]) {
+        n += 1;
+        // console.log(point[0]);
+        x += point[0];
+        y += point[1];
+      }
+    });
+    x /= n;
+    y /= n;
+    // console.log("x position of label: " + x.toString());
+    // console.log("y position of label: " + y.toString());
+
+    const styleObj = {
+      position: "absolute",
+      top: y - this.yOffset - 10,
+      left: x - 10,
+      textAlign: "center",
+      fontSize: 20,
+      fontWeight: "bold",
+      color: "white",
+      zIndex: 2,
+      cursor: "pointer",
+    };
+
+    const translator = ["S1", "L1", "L2", "L3", "L4", "L5"];
+    return (
+      <div style={styleObj} onClick={this.onClick}>
+        {translator[this.props.level]}
+      </div>
     );
   };
 
   render() {
-    // const { deltaPosition } = this.state;
     return (
       <div>
-        <Draggable onDrag={this.handleDrag}>
-          <div
-            className="point"
-            style={{
-              top: this.props.y - 7,
-              left: this.props.x - 7,
-            }}
-          ></div>
-        </Draggable>
+        {this.renderPoints()}
+        {this.renderLines()}
+        {this.renderLabel()}
       </div>
     );
   }

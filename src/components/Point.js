@@ -5,7 +5,9 @@ import "./styles.css";
 export default class Point extends React.Component {
   constructor(props) {
     super(props);
-    console.log("point created with props: " + props);
+    console.log(
+      "point created with props: " + this.props.x + ", " + this.props.y
+    );
     this.state = {
       deltaPosition: {
         x: this.props.x,
