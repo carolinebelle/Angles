@@ -2,7 +2,7 @@
   "name": "chart-note",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://carolinebelle.github.io/ChartNote/",
+  "homepage": "https://carolinebelle.github.io/Segmentation/",
   "dependencies": {
     "@rpldy/mock-sender": "^0.15.0",
     "@rpldy/sender": "^0.15.0",

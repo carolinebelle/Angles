@@ -17,7 +17,7 @@
   display: flex;
   justify-content: space-between;
   font-family: arial, sans-serif;
-  background-color: rgb(154, 151, 173);
+  background-color: rgb(128, 155, 230);
   overflow: hidden;
   position: fixed; /* Set the navbar to fixed position */
   top: 0; /* Position the navbar at the top of the page */
@@ -69,10 +69,10 @@
 }
 .TextBox:hover {
   border: 2px solid white;
-  background-color: rgba(52, 51, 59, 0.541);
+  background-color: rgba(89, 108, 158, 0.541);
 }
 .TextBox:active {
-  background-color: rgba(52, 51, 59, 0.226);
+  background-color: rgba(40, 48, 71, 0.226);
 }
 .Overlay {
   position: absolute;
@@ -104,24 +104,24 @@ button {
   width: auto;
   padding: 5;
   font-size: 22px;
-  background-color: rgba(154, 151, 173, 0.541);
+  background-color: rgba(128, 155, 230, 0.541);
   border: 5px solid white;
   color: white;
   text-transform: uppercase;
 }
 button:hover {
-  background-color: rgba(52, 51, 59, 0.541);
+  background-color: rgba(89, 108, 158, 0.541);
 }
 button:active {
-  border: 2px solid rgba(52, 51, 59, 0.541);
-  background-color: rgba(52, 51, 59, 0.226);
+  border: 2px solid rgba(128, 155, 230, 0.541);
+  background-color: rgba(40, 48, 71, 0.226);
 }
 .buttonLevel {
   flex: 1;
   position: relative;
   height: auto;
   background-color: transparent;
-  border: 2px solid rgb(167, 167, 167);
+  border: 2px solid rgb(128, 155, 230);
   color: #fff;
   text-align: center;
   box-shadow: 2px 2px 3px #999;
@@ -137,8 +137,8 @@ button:active {
   flex: 1;
   position: relative;
   height: auto;
-  background-color: rgb(154, 151, 173);
-  border: 2px solid rgb(154, 151, 173);
+  background-color: rgb(128, 155, 230);
+  border: 2px solid rgb(128, 155, 230);
   color: black;
   text-align: center;
   box-shadow: 2px 2px 3px #999;
@@ -152,20 +152,20 @@ button:active {
   margin: 2px;
 }
 .buttonLevelSelected:hover {
-  background-color: rgba(154, 151, 173, 0.75);
-  border: 2px solid rgb(154, 151, 173);
+  background-color: rgba(89, 108, 158, 0.75);
+  border: 2px solid rgb(128, 155, 230);
 }
 .buttonLevelSelected:active {
-  border: 2px solid rgba(52, 51, 59, 0.541);
-  background-color: rgba(52, 51, 59, 0.226);
+  border: 2px solid rgba(128, 155, 230, 0.541);
+  background-color: rgba(40, 48, 71, 0.226);
 }
 .buttonLevel:hover {
-  background-color: rgb(154, 151, 173, 0.25);
-  border: 2px solid rgb(154, 151, 173);
+  background-color: rgb(89, 108, 158, 0.25);
+  border: 2px solid rgb(128, 155, 230);
 }
 .buttonLevel:active {
-  border: 2px solid rgba(52, 51, 59, 0.541);
-  background-color: rgba(52, 51, 59, 0.226);
+  border: 2px solid rgba(128, 155, 230, 0.541);
+  background-color: rgba(40, 48, 71, 0.226);
 }
 .reset {
   position: fixed;
@@ -173,7 +173,7 @@ button:active {
   height: 60px;
   bottom: 5%;
   right: 2vw;
-  background-color: rgb(154, 151, 173);
+  background-color: rgb(128, 155, 230);
   color: #fff;
   border-radius: 50px;
   text-align: center;
@@ -184,10 +184,10 @@ button:active {
   align-items: center;
 }
 .reset:hover {
-  background-color: rgba(154, 151, 173, 0.877);
+  background-color: rgba(89, 108, 158, 0.877);
 }
 .reset:active {
-  background-color: rgba(154, 151, 173, 0.363);
+  background-color: rgba(40, 48, 71, 0.363);
 }
 .point {
   position: fixed;

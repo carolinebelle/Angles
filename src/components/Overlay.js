@@ -11,7 +11,6 @@ import { Stage, Layer } from "react-konva";
 
 //TODO: selectively delete points and lines
 //TODO: points should be stuck to image even when resizing page
-
 const order = [5, 4, 3, 2, 1, 0];
 
 export default class Overlay extends React.Component {
@@ -57,6 +56,13 @@ export default class Overlay extends React.Component {
   maxPoints = 8;
 
   updateCount = 0;
+
+  /* Image formating **********************************************/
+  anteriorSide(checked) {
+    this.setState({ anteriorLeft: checked });
+  }
+
+  /* Level control **********************************************/
 
   toggleLevel(level) {
     let toSave = new Array(this.maxPoints); // data to save to landmarks
@@ -126,9 +132,7 @@ export default class Overlay extends React.Component {
     }
   }
 
-  anteriorSide(checked) {
-    this.setState({ anteriorLeft: checked });
-  }
+  /* Editing current level **********************************/
 
   canDraw(level, points) {
     let currentLevel = level || level == 0 ? level : this.state.currentLevel;
@@ -160,20 +164,139 @@ export default class Overlay extends React.Component {
     this.printPoints(points);
   }
 
-  getAngles() {
-    let ll = null;
-    let pi = null;
-    let pt = null;
+  onClick(e) {
+    if (this.state.draw) {
+      if (this.state.active) {
+        //second point of line
+        let index;
 
-    return <CopyText LL={ll} PI={pi} PT={pt} />;
+        if (!this.state.startPoints[2]) index = 2;
+        else if (!this.state.startPoints[4]) index = 4;
+        else index = -1; //no empty slot
+
+        if (index == 2) {
+          let mx = (this.state.points[0][0] + e.clientX) / 2;
+          let my = (this.state.points[0][1] + e.clientY) / 2;
+          let midpoint = [true, 1, mx, my];
+          let endpoint = [true, 2, e.clientX, e.clientY];
+          this.updateManyPositions([midpoint, endpoint]);
+          this.setState({ active: false }); //no longer actively drawing a line segment
+        } else if (index == 4) {
+          let mx = (this.state.points[6][0] + e.clientX) / 2;
+          let my = (this.state.points[6][1] + e.clientY) / 2;
+          let midpoint = [true, 5, mx, my];
+          let endpoint = [true, 4, e.clientX, e.clientY];
+
+          let addPoints = [midpoint, endpoint];
+
+          //add vertical midpoints
+          if (
+            //all other corners present
+            this.state.startPoints[0] &&
+            this.state.startPoints[2] &&
+            this.state.startPoints[6]
+          ) {
+            if (!this.state.startPoints[3]) {
+              //midpoint not already added
+              let mx = (this.state.points[2][0] + e.clientX) / 2;
+              let my = (this.state.points[2][1] + e.clientY) / 2;
+              addPoints.push([true, 3, mx, my]);
+            }
+            if (!this.state.startPoints[7]) {
+              //midpoint not already added
+              let mx = (this.state.points[0][0] + this.state.points[6][0]) / 2;
+              let my = (this.state.points[0][1] + this.state.points[6][1]) / 2;
+              addPoints.push([true, 7, mx, my]);
+            }
+          }
+          this.updateManyPositions(addPoints);
+          this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
+        } else {
+          this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
+        }
+      } else {
+        //first point of line
+        let index;
+
+        if (!this.state.startPoints[0]) index = 0;
+        else if (!this.state.startPoints[6]) index = 6;
+        else index = -1; //no empty slot
+
+        if (index != -1) {
+          this.updatePosition(true, index, e.clientX, e.clientY); //added a point
+          this.setState({ active: true }); //actively drawing a line segment
+        }
+      }
+    }
   }
 
-  //console log all points
-  printPoints = (array) => {
-    console.log(JSON.stringify(array));
-    console.log(
-      "Drawing: " + this.state.draw + "/ Active: " + this.state.active
-    );
+  onMouseMove(e) {
+    if (this.state.draw) {
+      this.setState({
+        mouseX: e.clientX,
+        mouseY: e.clientY,
+      });
+    }
+  }
+
+  activeLine = () => {
+    if (this.state.active && this.state.mouseX && this.state.mouseY) {
+      let x0;
+      let y0;
+      let x1;
+      let y1;
+      if (!this.state.points[2] && this.state.points[0]) {
+        x0 = this.state.points[0][0];
+        y0 = this.state.points[0][1];
+        x1 = this.state.mouseX;
+        y1 = this.state.mouseY;
+      } else if (!this.state.points[4] && this.state.points[6]) {
+        x0 = this.state.points[6][0];
+        y0 = this.state.points[6][1];
+        x1 = this.state.mouseX;
+        y1 = this.state.mouseY;
+      }
+      return (
+        <Line
+          x0={x0}
+          y0={y0}
+          x1={x1}
+          y1={y1}
+          className="line"
+          borderWidth={this.lineBorderWidth}
+        />
+      );
+    }
+  };
+
+  activeDraw = () => {
+    if (this.state.draw) {
+      if (this.state.mouseX && this.state.mouseY) {
+        if (this.state.active) {
+          return (
+            <div
+              className="point"
+              style={{
+                top: this.state.mouseY - 6.5,
+                left: this.state.mouseX - 7.5,
+                border: "2px solid red",
+              }}
+            />
+          );
+        } else {
+          return (
+            <div
+              className="point"
+              style={{
+                top: this.state.mouseY - 6.5,
+                left: this.state.mouseX - 7.5,
+                border: "2px solid grey",
+              }}
+            />
+          );
+        }
+      }
+    }
   };
 
   // //call setState to re-render component after updating coordinate of one point
@@ -235,6 +358,26 @@ export default class Overlay extends React.Component {
 
     this.setState({ startPoints: iPoints, points: updatedPoints });
   }
+
+  /* Statistics **********************************************/
+
+  getAngles() {
+    let ll = null;
+    let pi = null;
+    let pt = null;
+
+    return <CopyText LL={ll} PI={pi} PT={pt} />;
+  }
+
+  //console log all points
+  printPoints = (array) => {
+    console.log(JSON.stringify(array));
+    console.log(
+      "Drawing: " + this.state.draw + "/ Active: " + this.state.active
+    );
+  };
+
+  /* Display componenets ***********************/
 
   renderPoints = () => {
     return this.state.startPoints.map((point, index) => {
@@ -391,36 +534,6 @@ export default class Overlay extends React.Component {
     return <div>{lines}</div>;
   };
 
-  activeLine = () => {
-    if (this.state.active && this.state.mouseX && this.state.mouseY) {
-      let x0;
-      let y0;
-      let x1;
-      let y1;
-      if (!this.state.points[2] && this.state.points[0]) {
-        x0 = this.state.points[0][0];
-        y0 = this.state.points[0][1];
-        x1 = this.state.mouseX;
-        y1 = this.state.mouseY;
-      } else if (!this.state.points[4] && this.state.points[6]) {
-        x0 = this.state.points[6][0];
-        y0 = this.state.points[6][1];
-        x1 = this.state.mouseX;
-        y1 = this.state.mouseY;
-      }
-      return (
-        <Line
-          x0={x0}
-          y0={y0}
-          x1={x1}
-          y1={y1}
-          className="line"
-          borderWidth={this.lineBorderWidth}
-        />
-      );
-    }
-  };
-
   renderLandmarks = () => {
     if (this.state.landmarks) {
       let vertebra = [];
@@ -455,36 +568,6 @@ export default class Overlay extends React.Component {
         i += 1;
       }
       return <>{vertebra}</>;
-    }
-  };
-
-  activeDraw = () => {
-    if (this.state.draw) {
-      if (this.state.mouseX && this.state.mouseY) {
-        if (this.state.active) {
-          return (
-            <div
-              className="point"
-              style={{
-                top: this.state.mouseY - 6.5,
-                left: this.state.mouseX - 7.5,
-                border: "2px solid red",
-              }}
-            />
-          );
-        } else {
-          return (
-            <div
-              className="point"
-              style={{
-                top: this.state.mouseY - 6.5,
-                left: this.state.mouseX - 7.5,
-                border: "2px solid grey",
-              }}
-            />
-          );
-        }
-      }
     }
   };
 
@@ -524,7 +607,7 @@ export default class Overlay extends React.Component {
             <Switch
               onChange={this.anteriorSide}
               checked={this.state.anteriorLeft}
-              onColor="#9A97AD"
+              onColor="#809be6"
               offColor="#000000"
             />
             <div>Anterior on Left?</div>

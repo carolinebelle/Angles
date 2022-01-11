@@ -186,7 +186,7 @@ const UploadWithProgressPreview = (props) => {
   return (
     <div className="App">
       <div className="Header">
-        <div className="TitleBox">Rad Reader</div>
+        <div className="TitleBox">Segment</div>
         <div className="spacer" />
         <UploadButton>Upload Files</UploadButton>
       </div>
