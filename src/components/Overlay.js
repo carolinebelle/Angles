@@ -34,6 +34,7 @@ export default class Overlay extends React.Component {
     this.lineBorderWidth = 2;
 
     this.onClick = this.onClick.bind(this);
+    this.onDoubleClick = this.onDoubleClick.bind(this);
 
     this.onMouseMove = this.onMouseMove.bind(this);
     this.anteriorSide = this.anteriorSide.bind(this);
@@ -247,7 +248,12 @@ export default class Overlay extends React.Component {
     });
   };
 
+  onDoubleClick(e) {
+    console.log("double click");
+  }
+
   onClick(e) {
+    console.log("click");
     if (this.state.draw) {
       if (this.state.active) {
         //second point of line
@@ -474,6 +480,7 @@ export default class Overlay extends React.Component {
       <div>
         <div
           onClick={this.onClick}
+          onDoubleClick={this.onDoubleClick}
           onMouseMove={this.onMouseMove}
           className="Overlay"
         >
