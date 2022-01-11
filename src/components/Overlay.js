@@ -10,7 +10,8 @@ import LevelButton from "./LevelButton";
 import { Stage, Layer } from "react-konva";
 
 //TODO: selectively delete points and lines
-//TODO: points should be stuck to image even when resizing page
+
+//TODO: retain scaling of positions even when image size changes (also in correct format for mask rcnn)
 const order = [5, 4, 3, 2, 1, 0];
 
 export default class Overlay extends React.Component {
