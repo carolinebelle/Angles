@@ -11,6 +11,7 @@ import { Stage, Layer } from "react-konva";
 
 //TODO: selectively delete points and lines
 //TODO: points should be stuck to image even when resizing page
+const order = [5, 4, 3, 2, 1, 0];
 
 export default class Overlay extends React.Component {
   constructor(props) {
@@ -54,6 +55,13 @@ export default class Overlay extends React.Component {
   maxPoints = 8;
 
   updateCount = 0;
+
+  /* Image formating **********************************************/
+  anteriorSide(checked) {
+    this.setState({ anteriorLeft: checked });
+  }
+
+  /* Level control **********************************************/
 
   toggleLevel(level) {
     let toSave = new Array(this.maxPoints); // data to save to landmarks
@@ -123,9 +131,7 @@ export default class Overlay extends React.Component {
     }
   }
 
-  anteriorSide(checked) {
-    this.setState({ anteriorLeft: checked });
-  }
+  /* Editing current level **********************************/
 
   canDraw(level, points) {
     let currentLevel = level || level == 0 ? level : this.state.currentLevel;
@@ -156,96 +162,6 @@ export default class Overlay extends React.Component {
 
     this.printPoints(points);
   }
-
-  getAngles() {
-    let ll = null;
-    let pi = null;
-    let pt = null;
-
-    return <CopyText LL={ll} PI={pi} PT={pt} />;
-  }
-
-  //console log all points
-  printPoints = (array) => {
-    console.log(JSON.stringify(array));
-    console.log(
-      "Drawing: " + this.state.draw + "/ Active: " + this.state.active
-    );
-  };
-
-  // //call setState to re-render component after updating coordinate of one point
-  updatePosition(initial, index, x, y) {
-    let iPoints = new Array(this.state.startPoints.length);
-    let updatedPoints = new Array(this.state.points.length);
-
-    for (let i = 0; i < this.state.startPoints.length; i++) {
-      if (this.state.startPoints[i]) {
-        iPoints[i] = [...this.state.startPoints[i]];
-      }
-      if (this.state.points[i]) {
-        updatedPoints[i] = [...this.state.points[i]];
-      }
-    }
-
-    if (initial) {
-      iPoints[index] = [x, y];
-      updatedPoints[index] = [x, y];
-
-      this.setState({ startPoints: iPoints, points: updatedPoints });
-    } else {
-      updatedPoints[index] = [x, y];
-
-      this.setState({ points: updatedPoints });
-    }
-  }
-
-  updateManyPositions(updates) {
-    //deep copy of points and startPoints
-    let iPoints = new Array(this.state.startPoints.length);
-    let updatedPoints = new Array(this.state.points.length);
-
-    for (let i = 0; i < this.state.startPoints.length; i++) {
-      if (this.state.startPoints[i]) {
-        iPoints[i] = [...this.state.startPoints[i]];
-      }
-      if (this.state.points[i]) {
-        updatedPoints[i] = [...this.state.points[i]];
-      }
-    }
-
-    updates.forEach((element) => {
-      //[initial, index, x, y]
-      let initial = element[0];
-      let index = element[1];
-      let x = element[2];
-      let y = element[3];
-
-      if (initial) {
-        //add to startPoints and points
-        iPoints[index] = [x, y];
-        updatedPoints[index] = [x, y];
-      } else {
-        // only add to points
-        updatedPoints[index] = [x, y];
-      }
-    });
-
-    this.setState({ startPoints: iPoints, points: updatedPoints });
-  }
-
-  renderPoints = () => {
-    return this.state.startPoints.map((point, index) => {
-      return (
-        <Point
-          key={index.toString() + this.state.currentLevel.toString()}
-          x={point[0]}
-          y={point[1]}
-          updatePos={this.updatePosition}
-          index={index}
-        />
-      );
-    });
-  };
 
   onClick(e) {
     if (this.state.draw) {
@@ -322,6 +238,160 @@ export default class Overlay extends React.Component {
     }
   }
 
+  activeLine = () => {
+    if (this.state.active && this.state.mouseX && this.state.mouseY) {
+      let x0;
+      let y0;
+      let x1;
+      let y1;
+      if (!this.state.points[2] && this.state.points[0]) {
+        x0 = this.state.points[0][0];
+        y0 = this.state.points[0][1];
+        x1 = this.state.mouseX;
+        y1 = this.state.mouseY;
+      } else if (!this.state.points[4] && this.state.points[6]) {
+        x0 = this.state.points[6][0];
+        y0 = this.state.points[6][1];
+        x1 = this.state.mouseX;
+        y1 = this.state.mouseY;
+      }
+      return (
+        <Line
+          x0={x0}
+          y0={y0}
+          x1={x1}
+          y1={y1}
+          className="line"
+          borderWidth={this.lineBorderWidth}
+        />
+      );
+    }
+  };
+
+  activeDraw = () => {
+    if (this.state.draw) {
+      if (this.state.mouseX && this.state.mouseY) {
+        if (this.state.active) {
+          return (
+            <div
+              className="point"
+              style={{
+                top: this.state.mouseY - 6.5,
+                left: this.state.mouseX - 7.5,
+                border: "2px solid red",
+              }}
+            />
+          );
+        } else {
+          return (
+            <div
+              className="point"
+              style={{
+                top: this.state.mouseY - 6.5,
+                left: this.state.mouseX - 7.5,
+                border: "2px solid grey",
+              }}
+            />
+          );
+        }
+      }
+    }
+  };
+
+  // //call setState to re-render component after updating coordinate of one point
+  updatePosition(initial, index, x, y) {
+    let iPoints = new Array(this.state.startPoints.length);
+    let updatedPoints = new Array(this.state.points.length);
+
+    for (let i = 0; i < this.state.startPoints.length; i++) {
+      if (this.state.startPoints[i]) {
+        iPoints[i] = [...this.state.startPoints[i]];
+      }
+      if (this.state.points[i]) {
+        updatedPoints[i] = [...this.state.points[i]];
+      }
+    }
+
+    if (initial) {
+      iPoints[index] = [x, y];
+      updatedPoints[index] = [x, y];
+
+      this.setState({ startPoints: iPoints, points: updatedPoints });
+    } else {
+      updatedPoints[index] = [x, y];
+
+      this.setState({ points: updatedPoints });
+    }
+  }
+
+  updateManyPositions(updates) {
+    //deep copy of points and startPoints
+    let iPoints = new Array(this.state.startPoints.length);
+    let updatedPoints = new Array(this.state.points.length);
+
+    for (let i = 0; i < this.state.startPoints.length; i++) {
+      if (this.state.startPoints[i]) {
+        iPoints[i] = [...this.state.startPoints[i]];
+      }
+      if (this.state.points[i]) {
+        updatedPoints[i] = [...this.state.points[i]];
+      }
+    }
+
+    updates.forEach((element) => {
+      //[initial, index, x, y]
+      let initial = element[0];
+      let index = element[1];
+      let x = element[2];
+      let y = element[3];
+
+      if (initial) {
+        //add to startPoints and points
+        iPoints[index] = [x, y];
+        updatedPoints[index] = [x, y];
+      } else {
+        // only add to points
+        updatedPoints[index] = [x, y];
+      }
+    });
+
+    this.setState({ startPoints: iPoints, points: updatedPoints });
+  }
+
+  /* Statistics **********************************************/
+
+  getAngles() {
+    let ll = null;
+    let pi = null;
+    let pt = null;
+
+    return <CopyText LL={ll} PI={pi} PT={pt} />;
+  }
+
+  //console log all points
+  printPoints = (array) => {
+    console.log(JSON.stringify(array));
+    console.log(
+      "Drawing: " + this.state.draw + "/ Active: " + this.state.active
+    );
+  };
+
+  /* Display componenets ***********************/
+
+  renderPoints = () => {
+    return this.state.startPoints.map((point, index) => {
+      return (
+        <Point
+          key={index.toString() + this.state.currentLevel.toString()}
+          x={point[0]}
+          y={point[1]}
+          updatePos={this.updatePosition}
+          index={index}
+        />
+      );
+    });
+  };
+
   renderLines = () => {
     let lines = [];
     let x0;
@@ -372,36 +442,6 @@ export default class Overlay extends React.Component {
     return <div>{lines}</div>;
   };
 
-  activeLine = () => {
-    if (this.state.active && this.state.mouseX && this.state.mouseY) {
-      let x0;
-      let y0;
-      let x1;
-      let y1;
-      if (!this.state.points[2] && this.state.points[0]) {
-        x0 = this.state.points[0][0];
-        y0 = this.state.points[0][1];
-        x1 = this.state.mouseX;
-        y1 = this.state.mouseY;
-      } else if (!this.state.points[4] && this.state.points[6]) {
-        x0 = this.state.points[6][0];
-        y0 = this.state.points[6][1];
-        x1 = this.state.mouseX;
-        y1 = this.state.mouseY;
-      }
-      return (
-        <Line
-          x0={x0}
-          y0={y0}
-          x1={x1}
-          y1={y1}
-          className="line"
-          borderWidth={this.lineBorderWidth}
-        />
-      );
-    }
-  };
-
   renderLandmarks = () => {
     if (this.state.landmarks) {
       let vertebra = [];
@@ -436,36 +476,6 @@ export default class Overlay extends React.Component {
         i += 1;
       }
       return <>{vertebra}</>;
-    }
-  };
-
-  activeDraw = () => {
-    if (this.state.draw) {
-      if (this.state.mouseX && this.state.mouseY) {
-        if (this.state.active) {
-          return (
-            <div
-              className="point"
-              style={{
-                top: this.state.mouseY - 6.5,
-                left: this.state.mouseX - 7.5,
-                border: "2px solid red",
-              }}
-            />
-          );
-        } else {
-          return (
-            <div
-              className="point"
-              style={{
-                top: this.state.mouseY - 6.5,
-                left: this.state.mouseX - 7.5,
-                border: "2px solid grey",
-              }}
-            />
-          );
-        }
-      }
     }
   };
 
