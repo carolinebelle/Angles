@@ -12,6 +12,8 @@ import { Stage, Layer } from "react-konva";
 //TODO: selectively delete points and lines
 //TODO: points should be stuck to image even when resizing page
 
+const order = [5, 4, 3, 2, 1, 0];
+
 export default class Overlay extends React.Component {
   constructor(props) {
     super(props);
@@ -250,6 +252,17 @@ export default class Overlay extends React.Component {
 
   onDoubleClick(e) {
     console.log("double click");
+    let index = order.indexOf(this.state.currentLevel);
+    if (index == -1) {
+      index = 5;
+    } else {
+      if (index == 5) {
+        index = order[0];
+      } else {
+        index = order[index + 1];
+      }
+    }
+    this.toggleLevel(index);
   }
 
   onClick(e) {
