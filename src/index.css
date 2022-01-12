@@ -1,8 +1,15 @@
+:root {
+  font-size: 62.5%;
+}
 body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
+  margin: 0px;
+  padding: 0px;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
   background-color: black;
-  overflow: hidden;
+  font-family: arial, sans-serif;
+  user-select: none;
 }
