@@ -37,6 +37,8 @@ export default class Overlay extends React.Component {
 
     this.onClick = this.onClick.bind(this);
     this.onDoubleClick = this.onDoubleClick.bind(this);
+    this.toImgCoords = this.toImgCoords.bind(this);
+    this.fromImgCoords = this.fromImgCoords.bind(this);
 
     this.onMouseMove = this.onMouseMove.bind(this);
     this.anteriorSide = this.anteriorSide.bind(this);
@@ -165,77 +167,12 @@ export default class Overlay extends React.Component {
     this.printPoints(points);
   }
 
-  onClick(e) {
-    if (this.state.draw) {
-      if (this.state.active) {
-        //second point of line
-        let index;
-
-        if (!this.state.startPoints[2]) index = 2;
-        else if (!this.state.startPoints[4]) index = 4;
-        else index = -1; //no empty slot
-
-        if (index == 2) {
-          let mx = (this.state.points[0][0] + e.clientX) / 2;
-          let my = (this.state.points[0][1] + e.clientY) / 2;
-          let midpoint = [true, 1, mx, my];
-          let endpoint = [true, 2, e.clientX, e.clientY];
-          this.updateManyPositions([midpoint, endpoint]);
-          this.setState({ active: false }); //no longer actively drawing a line segment
-        } else if (index == 4) {
-          let mx = (this.state.points[6][0] + e.clientX) / 2;
-          let my = (this.state.points[6][1] + e.clientY) / 2;
-          let midpoint = [true, 5, mx, my];
-          let endpoint = [true, 4, e.clientX, e.clientY];
-
-          let addPoints = [midpoint, endpoint];
-
-          //add vertical midpoints
-          if (
-            //all other corners present
-            this.state.startPoints[0] &&
-            this.state.startPoints[2] &&
-            this.state.startPoints[6]
-          ) {
-            if (!this.state.startPoints[3]) {
-              //midpoint not already added
-              let mx = (this.state.points[2][0] + e.clientX) / 2;
-              let my = (this.state.points[2][1] + e.clientY) / 2;
-              addPoints.push([true, 3, mx, my]);
-            }
-            if (!this.state.startPoints[7]) {
-              //midpoint not already added
-              let mx = (this.state.points[0][0] + this.state.points[6][0]) / 2;
-              let my = (this.state.points[0][1] + this.state.points[6][1]) / 2;
-              addPoints.push([true, 7, mx, my]);
-            }
-          }
-          this.updateManyPositions(addPoints);
-          this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
-        } else {
-          this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
-        }
-      } else {
-        //first point of line
-        let index;
-
-        if (!this.state.startPoints[0]) index = 0;
-        else if (!this.state.startPoints[6]) index = 6;
-        else index = -1; //no empty slot
-
-        if (index != -1) {
-          this.updatePosition(true, index, e.clientX, e.clientY); //added a point
-          this.setState({ active: true }); //actively drawing a line segment
-        }
-      }
-    }
-  }
-
   onMouseMove(e) {
     if (this.state.draw) {
+      let { x, y } = this.toImgCoords(e.clientX, e.clientY);
       this.setState({
-        mouseX: e.clientX,
-        mouseY: e.clientY,
+        mouseX: x,
+        mouseY: y,
       });
     }
   }
@@ -410,7 +347,8 @@ export default class Overlay extends React.Component {
   }
 
   onClick(e) {
-    console.log("click");
+    let { x, y } = this.toImgCoords(e.clientX, e.clientY);
+    console.log("click- left: " + x + ", top: " + y);
     if (this.state.draw) {
       if (this.state.active) {
         //second point of line
@@ -421,17 +359,17 @@ export default class Overlay extends React.Component {
         else index = -1; //no empty slot
 
         if (index == 2) {
-          let mx = (this.state.points[0][0] + e.clientX) / 2;
-          let my = (this.state.points[0][1] + e.clientY) / 2;
+          let mx = (this.state.points[0][0] + x) / 2;
+          let my = (this.state.points[0][1] + y) / 2;
           let midpoint = [true, 1, mx, my];
-          let endpoint = [true, 2, e.clientX, e.clientY];
+          let endpoint = [true, 2, x, y];
           this.updateManyPositions([midpoint, endpoint]);
           this.setState({ active: false }); //no longer actively drawing a line segment
         } else if (index == 4) {
-          let mx = (this.state.points[6][0] + e.clientX) / 2;
-          let my = (this.state.points[6][1] + e.clientY) / 2;
+          let mx = (this.state.points[6][0] + x) / 2;
+          let my = (this.state.points[6][1] + y) / 2;
           let midpoint = [true, 5, mx, my];
-          let endpoint = [true, 4, e.clientX, e.clientY];
+          let endpoint = [true, 4, x, y];
 
           let addPoints = [midpoint, endpoint];
 
@@ -444,8 +382,8 @@ export default class Overlay extends React.Component {
           ) {
             if (!this.state.startPoints[3]) {
               //midpoint not already added
-              let mx = (this.state.points[2][0] + e.clientX) / 2;
-              let my = (this.state.points[2][1] + e.clientY) / 2;
+              let mx = (this.state.points[2][0] + x) / 2;
+              let my = (this.state.points[2][1] + y) / 2;
               addPoints.push([true, 3, mx, my]);
             }
             if (!this.state.startPoints[7]) {
@@ -469,20 +407,24 @@ export default class Overlay extends React.Component {
         else index = -1; //no empty slot
 
         if (index != -1) {
-          this.updatePosition(true, index, e.clientX, e.clientY); //added a point
+          this.updatePosition(true, index, x, y); //added a point
           this.setState({ active: true }); //actively drawing a line segment
         }
       }
     }
   }
 
-  onMouseMove(e) {
-    if (this.state.draw) {
-      this.setState({
-        mouseX: e.clientX,
-        mouseY: e.clientY,
-      });
-    }
+  toImgCoords(screenX, screenY) {
+    let x = screenX - this.props.left;
+    let y = screenY - this.props.top;
+    console.log("x: " + x + ", y: " + y);
+    return { x, y };
+  }
+
+  fromImgCoords(imgX, imgY) {
+    let x = imgX + this.props.left;
+    let y = imgY + this.props.top;
+    return { x, y };
   }
 
   renderLines = () => {
@@ -574,12 +516,18 @@ export default class Overlay extends React.Component {
 
   render() {
     return (
-      <div>
+      <>
         <div
           onClick={this.onClick}
           onDoubleClick={this.onDoubleClick}
           onMouseMove={this.onMouseMove}
           className="Overlay"
+          style={{
+            top: this.props.top,
+            left: this.props.left,
+            width: this.props.imgWidth,
+            height: this.props.imgHeight,
+          }}
         >
           {this.renderPoints()}
           {this.activeDraw()}
@@ -587,10 +535,10 @@ export default class Overlay extends React.Component {
           {this.renderLines()}
           {this.renderLandmarks()}
           <Stage
-            width={window.innerWidth}
-            height={window.innerHeight}
-            x={0}
-            y={0}
+            width={this.props.imgWidth == 0 ? 1 : this.props.imgWidth}
+            height={this.props.imgHeight == 0 ? 1 : this.props.imgHeight}
+            x={this.props.left}
+            y={this.props.top}
           >
             <Layer>
               <Mask
@@ -602,17 +550,14 @@ export default class Overlay extends React.Component {
             </Layer>
           </Stage>
         </div>
-        <div>{this.getAngles()}</div>
+        <div id="copytext">{this.getAngles()}</div>
         <div className="switch">
-          <label>
-            <Switch
-              onChange={this.anteriorSide}
-              checked={this.state.anteriorLeft}
-              onColor="#809be6"
-              offColor="#000000"
-            />
-            <div>Anterior on Left?</div>
-          </label>
+          <Switch
+            onChange={this.anteriorSide}
+            checked={this.state.anteriorLeft}
+            onColor="#809be6"
+            offColor="#000000"
+          />
         </div>
         <div className="rightPanel">
           <LevelButton
@@ -652,7 +597,7 @@ export default class Overlay extends React.Component {
             toggleLevel={this.toggleLevel}
           />
         </div>
-      </div>
+      </>
     );
   }
 }

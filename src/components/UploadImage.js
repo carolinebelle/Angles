@@ -5,10 +5,9 @@ import Uploady, {
   useItemProgressListener,
   useItemStartListener,
 } from "@rpldy/uploady";
-import { getMockSenderEnhancer } from "@rpldy/mock-sender";
 import UploadButton from "@rpldy/upload-button";
 import UploadPreview from "@rpldy/upload-preview";
-import withPasteUpload, { usePasteUpload } from "@rpldy/upload-paste";
+import withPasteUpload from "@rpldy/upload-paste";
 import UploadDropZone from "@rpldy/upload-drop-zone";
 import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
@@ -106,8 +105,9 @@ const testData3 = [
 ];
 
 const StyledDropZone = styled(UploadDropZone)`n
-  border: 5px solid rgb(128, 155, 230);
+  border: 1px solid rgb(128, 155, 230);
   height: 100%;
+  width: 100%;
   display: flex;
   justify-content: center;
 `;
@@ -135,11 +135,13 @@ const UploadProgress = () => {
   );
 };
 
-const CustomImagePreview = ({ id, url }) => {
+const CustomImagePreview = ({ id, url, handler }) => {
   const [completed, setCompleted] = useState(0);
 
   const onImgLoad = ({ target: img }) => {
-    console.log("height: " + img.offsetHeight + " / width: " + img.offsetWidth);
+    console.log("top: " + img.offsetTop + " / left: " + img.offsetLeft);
+    console.log("height: " + img.height + " / width: " + img.width);
+    handler(img.offsetLeft, img.offsetTop, img.width, img.height);
   };
 
   useItemProgressListener((item) => {
@@ -149,18 +151,27 @@ const CustomImagePreview = ({ id, url }) => {
   });
 
   return (
-    <img
-      className="PreviewImg"
-      onLoad={onImgLoad}
-      src={url}
-      completed={completed}
-    ></img>
+    <div className="PreviewContainer">
+      <img
+        className="PreviewImg"
+        onLoad={onImgLoad}
+        src={url}
+        completed={completed}
+      ></img>
+    </div>
   );
 };
 
-const UploadWithProgressPreview = (props) => {
+const UploadWithProgressPreview = () => {
   const [itemNum, setItemNum] = useState(0);
-  const getPreviewProps = useCallback((item) => ({ id: item.id }), []);
+  const [x0, setX0] = useState(0);
+  const [y0, setY0] = useState(0);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const getPreviewProps = useCallback(
+    (item) => ({ id: item.id, handler: setCoords }),
+    []
+  );
 
   useItemStartListener(() => {
     reset();
@@ -169,6 +180,14 @@ const UploadWithProgressPreview = (props) => {
   const reset = () => {
     console.log("wiping points");
     setItemNum(itemNum + 1);
+  };
+
+  const setCoords = (x, y, width, height) => {
+    console.log("setting image coords");
+    setX0(x);
+    setY0(y);
+    setWidth(width);
+    setHeight(height);
   };
 
   return (
@@ -185,12 +204,20 @@ const UploadWithProgressPreview = (props) => {
         <div className="progressbar">
           <UploadProgress />
         </div>
-        <PasteUploadDropZone params={{ test: "paste" }}>
+        <PasteUploadDropZone id="dropzone" params={{ test: "paste" }}>
           <UploadPreview
             previewComponentProps={getPreviewProps}
             PreviewComponent={CustomImagePreview}
           />
-          <Overlay key={itemNum} data={testData2} points={new Array(8)} />
+          <Overlay
+            key={itemNum}
+            data={testData2}
+            points={new Array(8)}
+            top={y0}
+            left={x0}
+            imgWidth={width}
+            imgHeight={height}
+          />
         </PasteUploadDropZone>
       </div>
       <div onClick={reset} className="reset">

@@ -38,7 +38,7 @@ body,
   top: 0;
   left: 40%;
   height: 10vh;
-  min-height: 50px;
+  max-height: 50px;
   width: 20%;
   border-radius: 30px;
   font-size: max(0, 2.8vh);
@@ -76,9 +76,9 @@ button.upload:active {
 
 .Content {
   display: flex;
+  flex: 1;
   flex-direction: column;
   color: white;
-  flex-basis: 90vh;
 }
 
 .Announcements {
@@ -95,30 +95,29 @@ button.upload:active {
 }
 
 .PreviewContainer {
-  z-index: 1;
-  height: 100%;
+  height: 90vh;
+  max-height: 100%;
+  max-width: 100%;
 }
 
 .PreviewImg {
-  display: block;
-  max-width: 100%;
-  height: auto;
+  max-height: 100%;
+  width: auto;
   object-fit: contain;
-  transition: opacity 0.4s;
 }
 
 .Overlay {
+  cursor: pointer;
   position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
   z-index: 9;
 }
+
 .Overlay.drag {
+  position: absolute;
   cursor: crosshair !important;
   user-select: none;
 }
+
 .rightPanel {
   user-select: none;
   flex-direction: column;
@@ -135,7 +134,6 @@ button.upload:active {
 .buttonLevel {
   flex: 1;
   position: relative;
-  height: auto;
   background-color: transparent;
   border: 2px solid rgb(128, 155, 230);
   color: #fff;
@@ -185,7 +183,7 @@ button.upload:active {
 }
 
 .point {
-  position: fixed;
+  position: absolute;
   width: 10px;
   height: 10px;
   z-index: 3;
@@ -198,7 +196,7 @@ button.upload:active {
   user-select: none;
 }
 .pointInactive {
-  position: fixed;
+  position: absolute;
   width: 10px;
   height: 10px;
   z-index: 3;
@@ -206,14 +204,10 @@ button.upload:active {
 }
 .switch {
   position: fixed;
-  bottom: 5%;
-  padding-left: 20px;
+  bottom: 1vw;
   z-index: 11;
-  left: 0;
+  left: 1vw;
   color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 .line {
   pointer-events: none;
