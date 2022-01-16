@@ -11,7 +11,6 @@ import { Stage, Layer } from "react-konva";
 
 //TODO: selectively delete points and lines
 
-//TODO: retain scaling of positions even when image size changes (also in correct format for mask rcnn)
 const order = [5, 4, 3, 2, 1, 0];
 
 export default class Overlay extends React.Component {
@@ -39,13 +38,16 @@ export default class Overlay extends React.Component {
     this.onDoubleClick = this.onDoubleClick.bind(this);
     this.toImgCoords = this.toImgCoords.bind(this);
     this.fromImgCoords = this.fromImgCoords.bind(this);
+    this.imgToRealCoords = this.imgToRealCoords.bind(this);
+    this.realToImgCoords = this.realToImgCoords.bind(this);
+    this.screenToRealCoords = this.screenToRealCoords.bind(this);
+    this.realToScreenCoords = this.realToScreenCoords.bind(this);
 
     this.onMouseMove = this.onMouseMove.bind(this);
     this.anteriorSide = this.anteriorSide.bind(this);
     this.activeDraw = this.activeDraw.bind(this);
     this.renderLines = this.renderLines.bind(this);
 
-    this.printPoints = this.printPoints.bind(this);
     this.updatePosition = this.updatePosition.bind(this);
     this.renderPoints = this.renderPoints.bind(this);
 
@@ -163,10 +165,9 @@ export default class Overlay extends React.Component {
     } else {
       this.setState({ draw: false, active: false });
     }
-
-    this.printPoints(points);
   }
 
+  // sets mouseX and mouseY to imgCoords
   onMouseMove(e) {
     if (this.state.draw) {
       let { x, y } = this.toImgCoords(e.clientX, e.clientY);
@@ -178,21 +179,32 @@ export default class Overlay extends React.Component {
   }
 
   activeLine = () => {
+    let coords;
     if (this.state.active && this.state.mouseX && this.state.mouseY) {
       let x0;
       let y0;
       let x1;
       let y1;
       if (!this.state.points[2] && this.state.points[0]) {
-        x0 = this.state.points[0][0];
-        y0 = this.state.points[0][1];
-        x1 = this.state.mouseX;
-        y1 = this.state.mouseY;
+        coords = this.realToScreenCoords(
+          this.state.points[0][0],
+          this.state.points[0][1]
+        );
+        x0 = coords.x;
+        y0 = coords.y;
+        coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
+        x1 = coords.x;
+        y1 = coords.y;
       } else if (!this.state.points[4] && this.state.points[6]) {
-        x0 = this.state.points[6][0];
-        y0 = this.state.points[6][1];
-        x1 = this.state.mouseX;
-        y1 = this.state.mouseY;
+        coords = this.realToScreenCoords(
+          this.state.points[6][0],
+          this.state.points[6][1]
+        );
+        x0 = coords.x;
+        y0 = coords.y;
+        coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
+        x1 = coords.x;
+        y1 = coords.y;
       }
       return (
         <Line
@@ -238,7 +250,15 @@ export default class Overlay extends React.Component {
   };
 
   // //call setState to re-render component after updating coordinate of one point
-  updatePosition(initial, index, x, y) {
+  updatePosition(initial, index, xCoord, yCoord, imgCoords = false) {
+    let x = xCoord;
+    let y = yCoord;
+    if (imgCoords) {
+      //convert from img coords to real coords
+      let { realX, realY } = this.imgToRealCoords(x, y);
+      x = realX;
+      y = realY;
+    }
     let iPoints = new Array(this.state.startPoints.length);
     let updatedPoints = new Array(this.state.points.length);
 
@@ -307,23 +327,17 @@ export default class Overlay extends React.Component {
     return <CopyText LL={ll} PI={pi} PT={pt} />;
   }
 
-  //console log all points
-  printPoints = (array) => {
-    console.log(JSON.stringify(array));
-    console.log(
-      "Drawing: " + this.state.draw + "/ Active: " + this.state.active
-    );
-  };
-
   /* Display componenets ***********************/
 
+  //converts realCoords to imgCoords
   renderPoints = () => {
     return this.state.startPoints.map((point, index) => {
+      let { imgX, imgY } = this.realToImgCoords(point[0], point[1]);
       return (
         <Point
           key={index.toString() + this.state.currentLevel.toString()}
-          x={point[0]}
-          y={point[1]}
+          x={imgX}
+          y={imgY}
           updatePos={this.updatePosition}
           index={index}
         />
@@ -332,7 +346,6 @@ export default class Overlay extends React.Component {
   };
 
   onDoubleClick(e) {
-    console.log("double click");
     let index = order.indexOf(this.state.currentLevel);
     if (index == -1) {
       index = 5;
@@ -346,9 +359,11 @@ export default class Overlay extends React.Component {
     this.toggleLevel(index);
   }
 
+  // passes real coords
   onClick(e) {
-    let { x, y } = this.toImgCoords(e.clientX, e.clientY);
-    console.log("click- left: " + x + ", top: " + y);
+    let { realX, realY } = this.screenToRealCoords(e.clientX, e.clientY);
+    let x = realX;
+    let y = realY;
     if (this.state.draw) {
       if (this.state.active) {
         //second point of line
@@ -414,10 +429,33 @@ export default class Overlay extends React.Component {
     }
   }
 
+  imgToRealCoords(imgX, imgY) {
+    let realX = (imgX / this.props.imgWidth) * this.props.realWidth;
+    let realY = (imgY / this.props.imgHeight) * this.props.realHeight;
+    return { realX, realY };
+  }
+
+  realToImgCoords(realX, realY) {
+    let imgX = (realX / this.props.realWidth) * this.props.imgWidth;
+    let imgY = (realY / this.props.realHeight) * this.props.imgHeight;
+    return { imgX, imgY };
+  }
+
+  realToScreenCoords(realX, realY) {
+    let { imgX, imgY } = this.realToImgCoords(realX, realY);
+    let { x, y } = this.fromImgCoords(imgX, imgY);
+    return { x, y };
+  }
+
+  screenToRealCoords(screenX, screenY) {
+    let { x, y } = this.toImgCoords(screenX, screenY);
+    let { realX, realY } = this.imgToRealCoords(x, y);
+    return { realX, realY };
+  }
+
   toImgCoords(screenX, screenY) {
     let x = screenX - this.props.left;
     let y = screenY - this.props.top;
-    console.log("x: " + x + ", y: " + y);
     return { x, y };
   }
 
@@ -429,6 +467,7 @@ export default class Overlay extends React.Component {
 
   renderLines = () => {
     let lines = [];
+    let coords;
     let x0;
     let y0;
     let x1;
@@ -437,10 +476,18 @@ export default class Overlay extends React.Component {
     let b = 1;
     while (b < this.state.points.length) {
       if (this.state.points[a] && this.state.points[b]) {
-        x0 = this.state.points[a][0];
-        y0 = this.state.points[a][1];
-        x1 = this.state.points[b][0];
-        y1 = this.state.points[b][1];
+        coords = this.realToScreenCoords(
+          this.state.points[a][0],
+          this.state.points[a][1]
+        );
+        x0 = coords.x;
+        y0 = coords.y;
+        coords = this.realToScreenCoords(
+          this.state.points[b][0],
+          this.state.points[b][1]
+        );
+        x1 = coords.x;
+        y1 = coords.y;
         lines.push(
           <Line
             key={a}
@@ -457,10 +504,18 @@ export default class Overlay extends React.Component {
       b += 1;
     }
     if (this.state.points[a] && this.state.points[0]) {
-      x0 = this.state.points[a][0];
-      y0 = this.state.points[a][1];
-      x1 = this.state.points[0][0];
-      y1 = this.state.points[0][1];
+      coords = this.realToScreenCoords(
+        this.state.points[a][0],
+        this.state.points[a][1]
+      );
+      x0 = coords.x;
+      y0 = coords.y;
+      coords = this.realToScreenCoords(
+        this.state.points[0][0],
+        this.state.points[0][1]
+      );
+      x1 = coords.x;
+      y1 = coords.y;
       lines.push(
         <Line
           key={a}
@@ -483,14 +538,33 @@ export default class Overlay extends React.Component {
       let i = 0;
       while (i < this.state.landmarks.length) {
         if (i != this.state.currentLevel && this.state.landmarks[i]) {
-          vertebra.push(
-            <Landmarks
-              key={i}
-              points={this.state.landmarks[i]}
-              toggleLevel={this.toggleLevel}
-              level={i}
-            />
-          );
+          let points = new Array(this.state.landmarks[i].length);
+          let countEl = 0;
+          for (let j = 0; j < this.state.landmarks[i].length; j++) {
+            if (
+              this.state.landmarks[i][j] &&
+              this.state.landmarks[i][j][0] &&
+              this.state.landmarks[i][j][1]
+            ) {
+              let { imgX, imgY } = this.realToImgCoords(
+                this.state.landmarks[i][j][0],
+                this.state.landmarks[i][j][1]
+              );
+              countEl += 1;
+              points[j] = [imgX, imgY];
+            }
+          }
+          if (countEl > 0) {
+            vertebra.push(
+              <Landmarks
+                key={i}
+                points={points}
+                toggleLevel={this.toggleLevel}
+                level={i}
+                translator={this.fromImgCoords}
+              />
+            );
+          }
         }
         i += 1;
       }
@@ -499,18 +573,60 @@ export default class Overlay extends React.Component {
   };
 
   renderMasks = () => {
-    if (this.state.landmarks) {
-      let vertebra = [];
-      let i = 0;
-      while (i < this.state.landmarks.length) {
-        if (i != this.state.currentLevel && this.state.landmarks[i]) {
-          vertebra.push(
-            <Mask key={i} points={this.state.landmarks[i]} active={false} />
-          );
+    if (this.props.imgWidth != 0 && this.props.imgHeight != 0) {
+      if (this.state.landmarks) {
+        let vertebra = [];
+        let i = 0;
+        while (i < this.state.landmarks.length) {
+          if (i != this.state.currentLevel && this.state.landmarks[i]) {
+            let points = new Array(this.state.landmarks[i].length);
+            for (let j = 0; j < this.state.landmarks[i].length; j++) {
+              if (
+                this.state.landmarks[i][j] &&
+                this.state.landmarks[i][j][0] &&
+                this.state.landmarks[i][j][1]
+              ) {
+                let { imgX, imgY } = this.realToImgCoords(
+                  this.state.landmarks[i][j][0],
+                  this.state.landmarks[i][j][1]
+                );
+                points[j] = [imgX, imgY];
+              }
+            }
+            vertebra.push(<Mask key={i} points={points} active={false} />);
+          }
+          i += 1;
         }
-        i += 1;
+
+        // translate points
+        let imgCoordPoints = new Array(this.state.points.length);
+        for (let j = 0; j < this.state.points.length; j++) {
+          if (this.state.points[j]) {
+            let { imgX, imgY } = this.realToImgCoords(
+              this.state.points[j][0],
+              this.state.points[j][1]
+            );
+            imgCoordPoints[j] = [imgX, imgY];
+          }
+        }
+
+        return (
+          <Stage
+            id="stage"
+            width={this.props.imgWidth}
+            height={this.props.imgHeight}
+          >
+            <Layer id="layer">
+              <Mask
+                key={new Date().getTime()}
+                points={imgCoordPoints}
+                active={true}
+              />
+              {vertebra}
+            </Layer>
+          </Stage>
+        );
       }
-      return <>{vertebra}</>;
     }
   };
 
@@ -534,21 +650,7 @@ export default class Overlay extends React.Component {
           {this.activeLine()}
           {this.renderLines()}
           {this.renderLandmarks()}
-          <Stage
-            width={this.props.imgWidth == 0 ? 1 : this.props.imgWidth}
-            height={this.props.imgHeight == 0 ? 1 : this.props.imgHeight}
-            x={this.props.left}
-            y={this.props.top}
-          >
-            <Layer>
-              <Mask
-                key={new Date().getTime()}
-                points={this.state.points}
-                active={true}
-              />
-              {this.renderMasks()}
-            </Layer>
-          </Stage>
+          {this.renderMasks()}
         </div>
         <div id="copytext">{this.getAngles()}</div>
         <div className="switch">

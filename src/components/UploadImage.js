@@ -11,7 +11,7 @@ import withPasteUpload from "@rpldy/upload-paste";
 import UploadDropZone from "@rpldy/upload-drop-zone";
 import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
-import { FaTrashAlt } from "react-icons/fa";
+import { FaBalanceScaleRight, FaTrashAlt } from "react-icons/fa";
 
 const testData1 = [
   [
@@ -135,13 +135,13 @@ const UploadProgress = () => {
   );
 };
 
-const CustomImagePreview = ({ id, url, handler }) => {
+const CustomImagePreview = ({ id, url, handler, scaler }) => {
   const [completed, setCompleted] = useState(0);
+  const imgRef = useRef(null);
 
   const onImgLoad = ({ target: img }) => {
-    console.log("top: " + img.offsetTop + " / left: " + img.offsetLeft);
-    console.log("height: " + img.height + " / width: " + img.width);
     handler(img.offsetLeft, img.offsetTop, img.width, img.height);
+    scaler(img.naturalWidth, img.naturalHeight);
   };
 
   useItemProgressListener((item) => {
@@ -150,9 +150,19 @@ const CustomImagePreview = ({ id, url, handler }) => {
     }
   });
 
+  function handleResize() {
+    if (imgRef) {
+      let rect = imgRef.current.getBoundingClientRect();
+      handler(rect.left, rect.top, rect.width, rect.height);
+    }
+  }
+
+  window.addEventListener("resize", handleResize);
+
   return (
     <div className="PreviewContainer">
       <img
+        ref={imgRef}
         className="PreviewImg"
         onLoad={onImgLoad}
         src={url}
@@ -168,8 +178,11 @@ const UploadWithProgressPreview = () => {
   const [y0, setY0] = useState(0);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
+  const [realWidth, setRealWidth] = useState(0);
+  const [realHeight, setRealHeight] = useState(0);
+
   const getPreviewProps = useCallback(
-    (item) => ({ id: item.id, handler: setCoords }),
+    (item) => ({ id: item.id, handler: setCoords, scaler: setReal }),
     []
   );
 
@@ -178,16 +191,19 @@ const UploadWithProgressPreview = () => {
   });
 
   const reset = () => {
-    console.log("wiping points");
     setItemNum(itemNum + 1);
   };
 
   const setCoords = (x, y, width, height) => {
-    console.log("setting image coords");
     setX0(x);
     setY0(y);
     setWidth(width);
     setHeight(height);
+  };
+
+  const setReal = (width, height) => {
+    setRealWidth(width);
+    setRealHeight(height);
   };
 
   return (
@@ -198,7 +214,7 @@ const UploadWithProgressPreview = () => {
       </div>
       <div className="Content">
         <div className="Announcements">
-          PROTOTYPE: window cannot be resized while maintaining landmark
+          UPDATED 01/16/22: window can be resized while maintaining landmark
           accuracy
         </div>
         <div className="progressbar">
@@ -217,6 +233,8 @@ const UploadWithProgressPreview = () => {
             left={x0}
             imgWidth={width}
             imgHeight={height}
+            realWidth={realWidth}
+            realHeight={realHeight}
           />
         </PasteUploadDropZone>
       </div>
