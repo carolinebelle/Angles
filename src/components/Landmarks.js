@@ -4,6 +4,7 @@ import React from "react";
 import "./styles.css";
 import { Line } from "react-lineto";
 
+//receives coordinates relative to size of image on screen (imgCoords)
 export default class Landmarks extends React.Component {
   constructor(props) {
     super(props);
@@ -58,6 +59,7 @@ export default class Landmarks extends React.Component {
 
   renderLines = () => {
     let lines = [];
+    let coords;
     let x0;
     let y0;
     let x1;
@@ -66,10 +68,18 @@ export default class Landmarks extends React.Component {
     let b = 1;
     while (b < this.props.points.length) {
       if (this.props.points[a] && this.props.points[b]) {
-        x0 = this.props.points[a][0];
-        y0 = this.props.points[a][1];
-        x1 = this.props.points[b][0];
-        y1 = this.props.points[b][1];
+        coords = this.props.translator(
+          this.props.points[a][0],
+          this.props.points[a][1]
+        );
+        x0 = coords.x;
+        y0 = coords.y;
+        coords = this.props.translator(
+          this.props.points[b][0],
+          this.props.points[b][1]
+        );
+        x1 = coords.x;
+        y1 = coords.y;
         lines.push(
           <Line
             key={a}
@@ -79,7 +89,7 @@ export default class Landmarks extends React.Component {
             y1={y1}
             className="line"
             borderWidth={2}
-            borderColor={"blue"}
+            borderColor="blue"
           />
         );
       }
@@ -87,10 +97,18 @@ export default class Landmarks extends React.Component {
       b += 1;
     }
     if (this.props.points[a] && this.props.points[0]) {
-      x0 = this.props.points[a][0];
-      y0 = this.props.points[a][1];
-      x1 = this.props.points[0][0];
-      y1 = this.props.points[0][1];
+      coords = this.props.translator(
+        this.props.points[a][0],
+        this.props.points[a][1]
+      );
+      x0 = coords.x;
+      y0 = coords.y;
+      coords = this.props.translator(
+        this.props.points[0][0],
+        this.props.points[0][1]
+      );
+      x1 = coords.x;
+      y1 = coords.y;
       lines.push(
         <Line
           key={a}
@@ -100,11 +118,10 @@ export default class Landmarks extends React.Component {
           y1={y1}
           className="line"
           borderWidth={2}
-          borderColor={"blue"}
+          borderColor="blue"
         />
       );
     }
-
     return <div>{lines}</div>;
   };
 
@@ -124,7 +141,7 @@ export default class Landmarks extends React.Component {
 
     const styleObj = {
       position: "absolute",
-      top: y - this.yOffset - 10,
+      top: y - 10,
       left: x - 10,
       textAlign: "center",
       fontSize: 20,

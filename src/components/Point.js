@@ -2,6 +2,7 @@ import React from "react";
 import Draggable from "react-draggable";
 import "./styles.css";
 
+//receives img coords of draggable points
 export default class Point extends React.Component {
   constructor(props) {
     super(props);
@@ -27,7 +28,8 @@ export default class Point extends React.Component {
       false,
       this.props.index,
       this.state.deltaPosition.x,
-      this.state.deltaPosition.y
+      this.state.deltaPosition.y,
+      true
     );
   };
 

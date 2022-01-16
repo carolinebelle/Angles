@@ -5,14 +5,13 @@ import Uploady, {
   useItemProgressListener,
   useItemStartListener,
 } from "@rpldy/uploady";
-import { getMockSenderEnhancer } from "@rpldy/mock-sender";
 import UploadButton from "@rpldy/upload-button";
 import UploadPreview from "@rpldy/upload-preview";
-import withPasteUpload, { usePasteUpload } from "@rpldy/upload-paste";
+import withPasteUpload from "@rpldy/upload-paste";
 import UploadDropZone from "@rpldy/upload-drop-zone";
 import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
-import { FaTrashAlt } from "react-icons/fa";
+import { FaBalanceScaleRight, FaTrashAlt } from "react-icons/fa";
 
 const testData1 = [
   [
@@ -106,33 +105,11 @@ const testData3 = [
 ];
 
 const StyledDropZone = styled(UploadDropZone)`n
-  width: 100%;
-  border: 1px solid rgb(154, 151, 173);
+  border: 1px solid rgb(128, 155, 230);
   height: 100%;
+  width: 100%;
+  display: flex;
   justify-content: center;
-  align-items: center;
-  z-index=15;
-`;
-
-const StyledProgress = styled.div`
-  position: absolute;
-  width: 100%;
-  z-index=3;
-`;
-
-const PreviewContainer = styled.div`
-  z-index=1;
-  height: 100%;
-`;
-
-const PreviewImage = styled.img`
-  display: block;
-  height: 100%;
-  width: 100%;
-  object-fit: contain;
-  transition: opacity 0.4s;
-
-  ${({ completed }) => `opacity: ${completed / 100}`}
 `;
 
 const PasteUploadDropZone = withPasteUpload(StyledDropZone);
@@ -158,8 +135,14 @@ const UploadProgress = () => {
   );
 };
 
-const CustomImagePreview = ({ id, url }) => {
+const CustomImagePreview = ({ id, url, handler, scaler }) => {
   const [completed, setCompleted] = useState(0);
+  const imgRef = useRef(null);
+
+  const onImgLoad = ({ target: img }) => {
+    handler(img.offsetLeft, img.offsetTop, img.width, img.height);
+    scaler(img.naturalWidth, img.naturalHeight);
+  };
 
   useItemProgressListener((item) => {
     if (item.id === id) {
@@ -167,42 +150,92 @@ const CustomImagePreview = ({ id, url }) => {
     }
   });
 
-  return <PreviewImage src={url} completed={completed}></PreviewImage>;
+  function handleResize() {
+    if (imgRef) {
+      let rect = imgRef.current.getBoundingClientRect();
+      handler(rect.left, rect.top, rect.width, rect.height);
+    }
+  }
+
+  window.addEventListener("resize", handleResize);
+
+  return (
+    <div className="PreviewContainer">
+      <img
+        ref={imgRef}
+        className="PreviewImg"
+        onLoad={onImgLoad}
+        src={url}
+        completed={completed}
+      ></img>
+    </div>
+  );
 };
 
-const UploadWithProgressPreview = (props) => {
+const UploadWithProgressPreview = () => {
   const [itemNum, setItemNum] = useState(0);
-  const getPreviewProps = useCallback((item) => ({ id: item.id }), []);
+  const [x0, setX0] = useState(0);
+  const [y0, setY0] = useState(0);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const [realWidth, setRealWidth] = useState(0);
+  const [realHeight, setRealHeight] = useState(0);
+
+  const getPreviewProps = useCallback(
+    (item) => ({ id: item.id, handler: setCoords, scaler: setReal }),
+    []
+  );
 
   useItemStartListener(() => {
     reset();
   });
 
-  function reset() {
-    console.log("wiping points");
+  const reset = () => {
     setItemNum(itemNum + 1);
-  }
+  };
+
+  const setCoords = (x, y, width, height) => {
+    setX0(x);
+    setY0(y);
+    setWidth(width);
+    setHeight(height);
+  };
+
+  const setReal = (width, height) => {
+    setRealWidth(width);
+    setRealHeight(height);
+  };
 
   return (
     <div className="App">
       <div className="Header">
         <div className="TitleBox">Segment</div>
-        <div className="spacer" />
-        <UploadButton>Upload Files</UploadButton>
+        <UploadButton className="upload">Upload Files</UploadButton>
       </div>
       <div className="Content">
-        PROTOTYPE: window cannot be resized while maintaining landmark accuracy
-        <StyledProgress>
+        <div className="Announcements">
+          UPDATED 01/16/22: window can be resized while maintaining landmark
+          accuracy
+        </div>
+        <div className="progressbar">
           <UploadProgress />
-        </StyledProgress>
-        <PasteUploadDropZone params={{ test: "paste" }}>
-          <PreviewContainer>
-            <UploadPreview
-              previewComponentProps={getPreviewProps}
-              PreviewComponent={CustomImagePreview}
-            />
-            <Overlay key={itemNum} data={testData2} points={new Array(8)} />
-          </PreviewContainer>
+        </div>
+        <PasteUploadDropZone id="dropzone" params={{ test: "paste" }}>
+          <UploadPreview
+            previewComponentProps={getPreviewProps}
+            PreviewComponent={CustomImagePreview}
+          />
+          <Overlay
+            key={itemNum}
+            data={testData2}
+            points={new Array(8)}
+            top={y0}
+            left={x0}
+            imgWidth={width}
+            imgHeight={height}
+            realWidth={realWidth}
+            realHeight={realHeight}
+          />
         </PasteUploadDropZone>
       </div>
       <div onClick={reset} className="reset">
@@ -212,12 +245,9 @@ const UploadWithProgressPreview = (props) => {
   );
 };
 
-const mockSenderEnhancer = getMockSenderEnhancer();
-
 const UploadImage = () => {
   return (
-    <Uploady debug enhancer={mockSenderEnhancer}>
-      {/*** remove mockSenderEnhancer */}
+    <Uploady>
       <UploadWithProgressPreview />
     </Uploady>
   );

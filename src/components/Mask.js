@@ -6,21 +6,14 @@ export default class Mask extends Component {
   constructor(props) {
     super(props);
     this.validPoints = this.validPoints.bind(this);
-    this.yOffset = Math.max(50, window.innerHeight * 0.1);
   }
 
   customShape = (context, shape) => {
     context.beginPath();
-    context.moveTo(
-      this.props.points[0][0],
-      this.props.points[0][1] - this.yOffset
-    );
+    context.moveTo(this.props.points[0][0], this.props.points[0][1]);
     let i = 1;
     while (i < this.props.points.length) {
-      context.lineTo(
-        this.props.points[i][0],
-        this.props.points[i][1] - this.yOffset
-      );
+      context.lineTo(this.props.points[i][0], this.props.points[i][1]);
       i += 1;
     }
     context.closePath();
