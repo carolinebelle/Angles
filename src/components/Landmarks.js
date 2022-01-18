@@ -163,7 +163,7 @@ export default class Landmarks extends React.Component {
       fontSize: 20,
       fontWeight: "bold",
       color: "white",
-      zIndex: 2,
+      zIndex: 4,
       cursor: "pointer",
     };
 
@@ -178,8 +178,8 @@ export default class Landmarks extends React.Component {
   render() {
     return (
       <div>
-        {this.renderPoints()}
         {this.renderLines()}
+        {this.renderPoints()}
       </div>
     );
   }
