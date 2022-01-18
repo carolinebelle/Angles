@@ -216,8 +216,7 @@ const UploadWithProgressPreview = () => {
       </div>
       <div className="Content">
         <div className="Announcements">
-          UPDATED 01/16/22: window can be resized while maintaining landmark
-          accuracy
+          UPDATED 01/18/22: femoral head masking
         </div>
         <div className="progressbar">
           <UploadProgress />
