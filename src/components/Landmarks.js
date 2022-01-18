@@ -12,11 +12,7 @@ export default class Landmarks extends React.Component {
     this.onClick = this.onClick.bind(this);
     this.renderLines = this.renderLines.bind(this);
     this.renderLabel = this.renderLabel.bind(this);
-
-    this.yOffset = Math.max(50, window.innerHeight * 0.1);
   }
-
-  componentDidUpdate() {}
 
   onClick(e) {
     this.props.toggleLevel(this.props.level);
@@ -151,7 +147,7 @@ export default class Landmarks extends React.Component {
       cursor: "pointer",
     };
 
-    const translator = ["S1", "L1", "L2", "L3", "L4", "L5"];
+    const translator = ["S1", "L1", "L2", "L3", "L4", "L5", "F1", "F2"];
     return (
       <div style={styleObj} onClick={this.onClick}>
         {translator[this.props.level]}
