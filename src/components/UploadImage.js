@@ -13,6 +13,8 @@ import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
 import { FaBalanceScaleRight, FaTrashAlt } from "react-icons/fa";
 
+const maxPoints = 8;
+
 const testData1 = [
   [
     [653, 581],
@@ -76,7 +78,7 @@ const testData1 = [
   ],
 ];
 
-const testData2 = new Array(6);
+const testData2 = new Array(8);
 
 const testData3 = [
   ,
@@ -228,7 +230,7 @@ const UploadWithProgressPreview = () => {
           <Overlay
             key={itemNum}
             data={testData2}
-            points={new Array(8)}
+            points={new Array(maxPoints)}
             top={y0}
             left={x0}
             imgWidth={width}

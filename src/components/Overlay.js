@@ -3,6 +3,7 @@ import "./styles.css";
 import { Line } from "react-lineto";
 import Point from "./Point";
 import Landmarks from "./Landmarks";
+import Circle from "./Circle";
 import CopyText from "./CopyText";
 import Switch from "react-switch";
 import Mask from "./Mask";
@@ -11,7 +12,7 @@ import { Stage, Layer } from "react-konva";
 
 //TODO: selectively delete points and lines
 
-const order = [5, 4, 3, 2, 1, 0];
+const order = [5, 4, 3, 2, 1, 0, 6, 7];
 
 export default class Overlay extends React.Component {
   constructor(props) {
@@ -56,6 +57,9 @@ export default class Overlay extends React.Component {
 
     this.toggleLevel = this.toggleLevel.bind(this);
     this.canDraw = this.canDraw.bind(this);
+
+    //femoral heads
+    this.activeCircle = this.activeCircle.bind(this);
   }
 
   maxPoints = 8;
@@ -70,9 +74,15 @@ export default class Overlay extends React.Component {
   /* Level control **********************************************/
 
   toggleLevel(level) {
-    let toSave = new Array(this.maxPoints); // data to save to landmarks
-    let toLoad = new Array(this.maxPoints); // data to pull from landmarks to load into startpoints
-    let newCurrent = new Array(this.maxPoints); // same as toLoad, data to pull from landmarks to load for active position tracking
+    console.log("toggle level: " + level);
+    let toSave =
+      this.state.currentLevel == 6 || this.state.currentLevel == 7
+        ? new Array(2)
+        : new Array(this.maxPoints); // data to save to landmarks
+    let toLoad =
+      level == 6 || level == 7 ? new Array(2) : new Array(this.maxPoints); // data to pull from landmarks to load into startpoints
+    let newCurrent =
+      level == 6 || level == 7 ? new Array(2) : new Array(this.maxPoints); // same as toLoad, data to pull from landmarks to load for active position tracking
 
     let existingData = this.state.landmarks[level]; //does data already exist for this level?
 
@@ -102,7 +112,11 @@ export default class Overlay extends React.Component {
         }
         newLandmarks[i] = vert;
       } else {
-        newLandmarks[i] = new Array(this.maxPoints);
+        if (i == 6 || i == 7) {
+          newLandmarks[i] = new Array(2); //only need 2 points for femoral heads
+        } else {
+          newLandmarks[i] = new Array(this.maxPoints);
+        }
       }
     }
 
@@ -144,23 +158,34 @@ export default class Overlay extends React.Component {
     let currentPoints = points ? points : this.state.startPoints;
 
     if (currentLevel != -1) {
-      let empty = -1;
-      const order = [0, 2, 6, 4];
-      order.forEach((num) => {
-        if (!currentPoints[num]) {
-          //does not exist
-          if (empty == -1) {
-            empty = num;
-          }
+      if (currentLevel == 6 || currentLevel == 7) {
+        if (!currentPoints[0]) {
+          //no first point yet
+          this.setState({ draw: true, active: false });
+        } else if (!currentPoints[1]) {
+          this.setState({ draw: true, active: true });
+        } else {
+          this.setState({ draw: false, active: false });
         }
-      });
-
-      if (empty == 0 || empty == 6) {
-        this.setState({ draw: true, active: false });
-      } else if (empty == 2 || empty == 4) {
-        this.setState({ draw: true, active: true });
       } else {
-        this.setState({ draw: false, active: false });
+        let empty = -1;
+        const pOrder = [0, 2, 6, 4];
+        pOrder.forEach((num) => {
+          if (!currentPoints[num]) {
+            //does not exist
+            if (empty == -1) {
+              empty = num;
+            }
+          }
+        });
+
+        if (empty == 0 || empty == 6) {
+          this.setState({ draw: true, active: false });
+        } else if (empty == 2 || empty == 4) {
+          this.setState({ draw: true, active: true });
+        } else {
+          this.setState({ draw: false, active: false });
+        }
       }
     } else {
       this.setState({ draw: false, active: false });
@@ -178,44 +203,74 @@ export default class Overlay extends React.Component {
     }
   }
 
-  activeLine = () => {
+  // dynamically draws circle based on mouse position and first point of femoral head
+  activeCircle = () => {
+    console.log("active circle being called");
     let coords;
-    if (this.state.active && this.state.mouseX && this.state.mouseY) {
-      let x0;
-      let y0;
-      let x1;
-      let y1;
-      if (!this.state.points[2] && this.state.points[0]) {
-        coords = this.realToScreenCoords(
-          this.state.points[0][0],
-          this.state.points[0][1]
-        );
-        x0 = coords.x;
-        y0 = coords.y;
-        coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
-        x1 = coords.x;
-        y1 = coords.y;
-      } else if (!this.state.points[4] && this.state.points[6]) {
-        coords = this.realToScreenCoords(
-          this.state.points[6][0],
-          this.state.points[6][1]
-        );
-        x0 = coords.x;
-        y0 = coords.y;
-        coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
-        x1 = coords.x;
-        y1 = coords.y;
-      }
-      return (
-        <Line
-          x0={x0}
-          y0={y0}
-          x1={x1}
-          y1={y1}
-          className="line"
-          borderWidth={this.lineBorderWidth}
-        />
+    let x0;
+    let y0;
+    if (!this.state.points[1] && this.state.points[0]) {
+      coords = this.realToImgCoords(
+        this.state.points[0][0],
+        this.state.points[0][1]
       );
+      x0 = coords.imgX;
+      y0 = coords.imgY;
+    }
+    return (
+      <Circle
+        key={this.state.mouseX + "," + this.state.mouseY}
+        x0={x0}
+        y0={y0}
+        x1={this.state.mouseX}
+        y1={this.state.mouseY}
+      />
+    );
+  };
+
+  activeLine = () => {
+    if (this.state.active && this.state.mouseX && this.state.mouseY) {
+      let coords;
+      if (this.state.currentLevel == 6 || this.state.currentLevel == 7) {
+        console.log("state current level: " + this.state.currentLevel);
+        return this.activeCircle();
+      } else {
+        let x0;
+        let y0;
+        let x1;
+        let y1;
+        if (!this.state.points[2] && this.state.points[0]) {
+          coords = this.realToScreenCoords(
+            this.state.points[0][0],
+            this.state.points[0][1]
+          );
+          x0 = coords.x;
+          y0 = coords.y;
+          coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
+          x1 = coords.x;
+          y1 = coords.y;
+        } else if (!this.state.points[4] && this.state.points[6]) {
+          coords = this.realToScreenCoords(
+            this.state.points[6][0],
+            this.state.points[6][1]
+          );
+          x0 = coords.x;
+          y0 = coords.y;
+          coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
+          x1 = coords.x;
+          y1 = coords.y;
+        }
+        return (
+          <Line
+            x0={x0}
+            y0={y0}
+            x1={x1}
+            y1={y1}
+            className="line"
+            borderWidth={this.lineBorderWidth}
+          />
+        );
+      }
     }
   };
 
@@ -348,10 +403,10 @@ export default class Overlay extends React.Component {
   onDoubleClick(e) {
     let index = order.indexOf(this.state.currentLevel);
     if (index == -1) {
-      index = 5;
+      index = order[0];
     } else {
-      if (index == 5) {
-        index = order[0];
+      if (index == order.length - 1) {
+        index = -1;
       } else {
         index = order[index + 1];
       }
@@ -365,60 +420,68 @@ export default class Overlay extends React.Component {
     let x = realX;
     let y = realY;
     if (this.state.draw) {
+      let femHead =
+        this.state.currentLevel == 6 || this.state.currentLevel == 7;
       if (this.state.active) {
         //second point of line
-        let index;
-
-        if (!this.state.startPoints[2]) index = 2;
-        else if (!this.state.startPoints[4]) index = 4;
-        else index = -1; //no empty slot
-
-        if (index == 2) {
-          let mx = (this.state.points[0][0] + x) / 2;
-          let my = (this.state.points[0][1] + y) / 2;
-          let midpoint = [true, 1, mx, my];
-          let endpoint = [true, 2, x, y];
-          this.updateManyPositions([midpoint, endpoint]);
-          this.setState({ active: false }); //no longer actively drawing a line segment
-        } else if (index == 4) {
-          let mx = (this.state.points[6][0] + x) / 2;
-          let my = (this.state.points[6][1] + y) / 2;
-          let midpoint = [true, 5, mx, my];
-          let endpoint = [true, 4, x, y];
-
-          let addPoints = [midpoint, endpoint];
-
-          //add vertical midpoints
-          if (
-            //all other corners present
-            this.state.startPoints[0] &&
-            this.state.startPoints[2] &&
-            this.state.startPoints[6]
-          ) {
-            if (!this.state.startPoints[3]) {
-              //midpoint not already added
-              let mx = (this.state.points[2][0] + x) / 2;
-              let my = (this.state.points[2][1] + y) / 2;
-              addPoints.push([true, 3, mx, my]);
-            }
-            if (!this.state.startPoints[7]) {
-              //midpoint not already added
-              let mx = (this.state.points[0][0] + this.state.points[6][0]) / 2;
-              let my = (this.state.points[0][1] + this.state.points[6][1]) / 2;
-              addPoints.push([true, 7, mx, my]);
-            }
-          }
-          this.updateManyPositions(addPoints);
+        if (femHead) {
+          this.updatePosition(true, 1, x, y);
           this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
         } else {
-          this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
+          let index;
+          if (!this.state.startPoints[2]) index = 2;
+          else if (!this.state.startPoints[4]) index = 4;
+          else index = -1; //no empty slot
+
+          if (index == 2) {
+            let mx = (this.state.points[0][0] + x) / 2;
+            let my = (this.state.points[0][1] + y) / 2;
+            let midpoint = [true, 1, mx, my];
+            let endpoint = [true, 2, x, y];
+            this.updateManyPositions([midpoint, endpoint]);
+            this.setState({ active: false }); //no longer actively drawing a line segment
+          } else if (index == 4) {
+            let mx = (this.state.points[6][0] + x) / 2;
+            let my = (this.state.points[6][1] + y) / 2;
+            let midpoint = [true, 5, mx, my];
+            let endpoint = [true, 4, x, y];
+
+            let addPoints = [midpoint, endpoint];
+
+            //add vertical midpoints
+            if (
+              //all other corners present
+              this.state.startPoints[0] &&
+              this.state.startPoints[2] &&
+              this.state.startPoints[6]
+            ) {
+              if (!this.state.startPoints[3]) {
+                //midpoint not already added
+                let mx = (this.state.points[2][0] + x) / 2;
+                let my = (this.state.points[2][1] + y) / 2;
+                addPoints.push([true, 3, mx, my]);
+              }
+              if (!this.state.startPoints[7]) {
+                //midpoint not already added
+                let mx =
+                  (this.state.points[0][0] + this.state.points[6][0]) / 2;
+                let my =
+                  (this.state.points[0][1] + this.state.points[6][1]) / 2;
+                addPoints.push([true, 7, mx, my]);
+              }
+            }
+            this.updateManyPositions(addPoints);
+            this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
+          } else {
+            this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
+          }
         }
       } else {
         //first point of line
         let index;
 
         if (!this.state.startPoints[0]) index = 0;
-        else if (!this.state.startPoints[6]) index = 6;
+        else if (!femHead && !this.state.startPoints[6]) index = 6;
         else index = -1; //no empty slot
 
         if (index != -1) {
@@ -429,44 +492,8 @@ export default class Overlay extends React.Component {
     }
   }
 
-  imgToRealCoords(imgX, imgY) {
-    let realX = (imgX / this.props.imgWidth) * this.props.realWidth;
-    let realY = (imgY / this.props.imgHeight) * this.props.realHeight;
-    return { realX, realY };
-  }
-
-  realToImgCoords(realX, realY) {
-    let imgX = (realX / this.props.realWidth) * this.props.imgWidth;
-    let imgY = (realY / this.props.realHeight) * this.props.imgHeight;
-    return { imgX, imgY };
-  }
-
-  realToScreenCoords(realX, realY) {
-    let { imgX, imgY } = this.realToImgCoords(realX, realY);
-    let { x, y } = this.fromImgCoords(imgX, imgY);
-    return { x, y };
-  }
-
-  screenToRealCoords(screenX, screenY) {
-    let { x, y } = this.toImgCoords(screenX, screenY);
-    let { realX, realY } = this.imgToRealCoords(x, y);
-    return { realX, realY };
-  }
-
-  toImgCoords(screenX, screenY) {
-    let x = screenX - this.props.left;
-    let y = screenY - this.props.top;
-    return { x, y };
-  }
-
-  fromImgCoords(imgX, imgY) {
-    let x = imgX + this.props.left;
-    let y = imgY + this.props.top;
-    return { x, y };
-  }
-
   renderLines = () => {
-    let lines = [];
+    let femHead = this.state.currentLevel == 6 || this.state.currentLevel == 7;
     let coords;
     let x0;
     let y0;
@@ -474,8 +501,63 @@ export default class Overlay extends React.Component {
     let y1;
     let a = 0;
     let b = 1;
-    while (b < this.state.points.length) {
-      if (this.state.points[a] && this.state.points[b]) {
+    if (femHead) {
+      if (this.state.points[0] && this.state.points[1]) {
+        coords = this.realToImgCoords(
+          this.state.points[0][0],
+          this.state.points[0][1]
+        );
+        x0 = coords.imgX;
+        y0 = coords.imgY;
+        coords = this.realToImgCoords(
+          this.state.points[1][0],
+          this.state.points[1][1]
+        );
+        x1 = coords.imgX;
+        y1 = coords.imgY;
+        return (
+          <Circle
+            key={x0 + ", " + y0 + " and " + x1 + ", " + y1}
+            x0={x0}
+            y0={y0}
+            x1={x1}
+            y1={y1}
+          />
+        );
+      }
+    } else {
+      let lines = [];
+
+      while (b < this.state.points.length) {
+        if (this.state.points[a] && this.state.points[b]) {
+          coords = this.realToScreenCoords(
+            this.state.points[a][0],
+            this.state.points[a][1]
+          );
+          x0 = coords.x;
+          y0 = coords.y;
+          coords = this.realToScreenCoords(
+            this.state.points[b][0],
+            this.state.points[b][1]
+          );
+          x1 = coords.x;
+          y1 = coords.y;
+          lines.push(
+            <Line
+              key={a}
+              x0={x0}
+              y0={y0}
+              x1={x1}
+              y1={y1}
+              className="line"
+              borderWidth={this.lineBorderWidth}
+            />
+          );
+        }
+        a += 1;
+        b += 1;
+      }
+      if (this.state.points[a] && this.state.points[0]) {
         coords = this.realToScreenCoords(
           this.state.points[a][0],
           this.state.points[a][1]
@@ -483,8 +565,8 @@ export default class Overlay extends React.Component {
         x0 = coords.x;
         y0 = coords.y;
         coords = this.realToScreenCoords(
-          this.state.points[b][0],
-          this.state.points[b][1]
+          this.state.points[0][0],
+          this.state.points[0][1]
         );
         x1 = coords.x;
         y1 = coords.y;
@@ -500,36 +582,9 @@ export default class Overlay extends React.Component {
           />
         );
       }
-      a += 1;
-      b += 1;
-    }
-    if (this.state.points[a] && this.state.points[0]) {
-      coords = this.realToScreenCoords(
-        this.state.points[a][0],
-        this.state.points[a][1]
-      );
-      x0 = coords.x;
-      y0 = coords.y;
-      coords = this.realToScreenCoords(
-        this.state.points[0][0],
-        this.state.points[0][1]
-      );
-      x1 = coords.x;
-      y1 = coords.y;
-      lines.push(
-        <Line
-          key={a}
-          x0={x0}
-          y0={y0}
-          x1={x1}
-          y1={y1}
-          className="line"
-          borderWidth={this.lineBorderWidth}
-        />
-      );
-    }
 
-    return <div>{lines}</div>;
+      return <div>{lines}</div>;
+    }
   };
 
   renderLandmarks = () => {
@@ -630,6 +685,43 @@ export default class Overlay extends React.Component {
     }
   };
 
+  /** Coordinate converters */
+  imgToRealCoords(imgX, imgY) {
+    let realX = (imgX / this.props.imgWidth) * this.props.realWidth;
+    let realY = (imgY / this.props.imgHeight) * this.props.realHeight;
+    return { realX, realY };
+  }
+
+  realToImgCoords(realX, realY) {
+    let imgX = (realX / this.props.realWidth) * this.props.imgWidth;
+    let imgY = (realY / this.props.realHeight) * this.props.imgHeight;
+    return { imgX, imgY };
+  }
+
+  realToScreenCoords(realX, realY) {
+    let { imgX, imgY } = this.realToImgCoords(realX, realY);
+    let { x, y } = this.fromImgCoords(imgX, imgY);
+    return { x, y };
+  }
+
+  screenToRealCoords(screenX, screenY) {
+    let { x, y } = this.toImgCoords(screenX, screenY);
+    let { realX, realY } = this.imgToRealCoords(x, y);
+    return { realX, realY };
+  }
+
+  toImgCoords(screenX, screenY) {
+    let x = screenX - this.props.left;
+    let y = screenY - this.props.top;
+    return { x, y };
+  }
+
+  fromImgCoords(imgX, imgY) {
+    let x = imgX + this.props.left;
+    let y = imgY + this.props.top;
+    return { x, y };
+  }
+
   render() {
     return (
       <>
@@ -696,6 +788,18 @@ export default class Overlay extends React.Component {
             index={0}
             level={"S1"}
             active={0 == this.state.currentLevel ? true : false}
+            toggleLevel={this.toggleLevel}
+          />
+          <LevelButton
+            index={6}
+            level={"F1"}
+            active={6 == this.state.currentLevel ? true : false}
+            toggleLevel={this.toggleLevel}
+          />
+          <LevelButton
+            index={7}
+            level={"F2"}
+            active={7 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
           />
         </div>
