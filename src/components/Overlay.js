@@ -224,7 +224,6 @@ export default class Overlay extends React.Component {
         y0={y0}
         x1={this.state.mouseX}
         y1={this.state.mouseY}
-        borderWidth={this.lineBorderWidth}
       />
     );
   };
@@ -421,60 +420,68 @@ export default class Overlay extends React.Component {
     let x = realX;
     let y = realY;
     if (this.state.draw) {
+      let femHead =
+        this.state.currentLevel == 6 || this.state.currentLevel == 7;
       if (this.state.active) {
         //second point of line
-        let index;
-
-        if (!this.state.startPoints[2]) index = 2;
-        else if (!this.state.startPoints[4]) index = 4;
-        else index = -1; //no empty slot
-
-        if (index == 2) {
-          let mx = (this.state.points[0][0] + x) / 2;
-          let my = (this.state.points[0][1] + y) / 2;
-          let midpoint = [true, 1, mx, my];
-          let endpoint = [true, 2, x, y];
-          this.updateManyPositions([midpoint, endpoint]);
-          this.setState({ active: false }); //no longer actively drawing a line segment
-        } else if (index == 4) {
-          let mx = (this.state.points[6][0] + x) / 2;
-          let my = (this.state.points[6][1] + y) / 2;
-          let midpoint = [true, 5, mx, my];
-          let endpoint = [true, 4, x, y];
-
-          let addPoints = [midpoint, endpoint];
-
-          //add vertical midpoints
-          if (
-            //all other corners present
-            this.state.startPoints[0] &&
-            this.state.startPoints[2] &&
-            this.state.startPoints[6]
-          ) {
-            if (!this.state.startPoints[3]) {
-              //midpoint not already added
-              let mx = (this.state.points[2][0] + x) / 2;
-              let my = (this.state.points[2][1] + y) / 2;
-              addPoints.push([true, 3, mx, my]);
-            }
-            if (!this.state.startPoints[7]) {
-              //midpoint not already added
-              let mx = (this.state.points[0][0] + this.state.points[6][0]) / 2;
-              let my = (this.state.points[0][1] + this.state.points[6][1]) / 2;
-              addPoints.push([true, 7, mx, my]);
-            }
-          }
-          this.updateManyPositions(addPoints);
+        if (femHead) {
+          this.updatePosition(true, 1, x, y);
           this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
         } else {
-          this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
+          let index;
+          if (!this.state.startPoints[2]) index = 2;
+          else if (!this.state.startPoints[4]) index = 4;
+          else index = -1; //no empty slot
+
+          if (index == 2) {
+            let mx = (this.state.points[0][0] + x) / 2;
+            let my = (this.state.points[0][1] + y) / 2;
+            let midpoint = [true, 1, mx, my];
+            let endpoint = [true, 2, x, y];
+            this.updateManyPositions([midpoint, endpoint]);
+            this.setState({ active: false }); //no longer actively drawing a line segment
+          } else if (index == 4) {
+            let mx = (this.state.points[6][0] + x) / 2;
+            let my = (this.state.points[6][1] + y) / 2;
+            let midpoint = [true, 5, mx, my];
+            let endpoint = [true, 4, x, y];
+
+            let addPoints = [midpoint, endpoint];
+
+            //add vertical midpoints
+            if (
+              //all other corners present
+              this.state.startPoints[0] &&
+              this.state.startPoints[2] &&
+              this.state.startPoints[6]
+            ) {
+              if (!this.state.startPoints[3]) {
+                //midpoint not already added
+                let mx = (this.state.points[2][0] + x) / 2;
+                let my = (this.state.points[2][1] + y) / 2;
+                addPoints.push([true, 3, mx, my]);
+              }
+              if (!this.state.startPoints[7]) {
+                //midpoint not already added
+                let mx =
+                  (this.state.points[0][0] + this.state.points[6][0]) / 2;
+                let my =
+                  (this.state.points[0][1] + this.state.points[6][1]) / 2;
+                addPoints.push([true, 7, mx, my]);
+              }
+            }
+            this.updateManyPositions(addPoints);
+            this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
+          } else {
+            this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
+          }
         }
       } else {
         //first point of line
         let index;
 
         if (!this.state.startPoints[0]) index = 0;
-        else if (!this.state.startPoints[6]) index = 6;
+        else if (!femHead && !this.state.startPoints[6]) index = 6;
         else index = -1; //no empty slot
 
         if (index != -1) {
@@ -486,7 +493,7 @@ export default class Overlay extends React.Component {
   }
 
   renderLines = () => {
-    let lines = [];
+    let femHead = this.state.currentLevel == 6 || this.state.currentLevel == 7;
     let coords;
     let x0;
     let y0;
@@ -494,8 +501,63 @@ export default class Overlay extends React.Component {
     let y1;
     let a = 0;
     let b = 1;
-    while (b < this.state.points.length) {
-      if (this.state.points[a] && this.state.points[b]) {
+    if (femHead) {
+      if (this.state.points[0] && this.state.points[1]) {
+        coords = this.realToImgCoords(
+          this.state.points[0][0],
+          this.state.points[0][1]
+        );
+        x0 = coords.imgX;
+        y0 = coords.imgY;
+        coords = this.realToImgCoords(
+          this.state.points[1][0],
+          this.state.points[1][1]
+        );
+        x1 = coords.imgX;
+        y1 = coords.imgY;
+        return (
+          <Circle
+            key={x0 + ", " + y0 + " and " + x1 + ", " + y1}
+            x0={x0}
+            y0={y0}
+            x1={x1}
+            y1={y1}
+          />
+        );
+      }
+    } else {
+      let lines = [];
+
+      while (b < this.state.points.length) {
+        if (this.state.points[a] && this.state.points[b]) {
+          coords = this.realToScreenCoords(
+            this.state.points[a][0],
+            this.state.points[a][1]
+          );
+          x0 = coords.x;
+          y0 = coords.y;
+          coords = this.realToScreenCoords(
+            this.state.points[b][0],
+            this.state.points[b][1]
+          );
+          x1 = coords.x;
+          y1 = coords.y;
+          lines.push(
+            <Line
+              key={a}
+              x0={x0}
+              y0={y0}
+              x1={x1}
+              y1={y1}
+              className="line"
+              borderWidth={this.lineBorderWidth}
+            />
+          );
+        }
+        a += 1;
+        b += 1;
+      }
+      if (this.state.points[a] && this.state.points[0]) {
         coords = this.realToScreenCoords(
           this.state.points[a][0],
           this.state.points[a][1]
@@ -503,8 +565,8 @@ export default class Overlay extends React.Component {
         x0 = coords.x;
         y0 = coords.y;
         coords = this.realToScreenCoords(
-          this.state.points[b][0],
-          this.state.points[b][1]
+          this.state.points[0][0],
+          this.state.points[0][1]
         );
         x1 = coords.x;
         y1 = coords.y;
@@ -520,36 +582,9 @@ export default class Overlay extends React.Component {
           />
         );
       }
-      a += 1;
-      b += 1;
-    }
-    if (this.state.points[a] && this.state.points[0]) {
-      coords = this.realToScreenCoords(
-        this.state.points[a][0],
-        this.state.points[a][1]
-      );
-      x0 = coords.x;
-      y0 = coords.y;
-      coords = this.realToScreenCoords(
-        this.state.points[0][0],
-        this.state.points[0][1]
-      );
-      x1 = coords.x;
-      y1 = coords.y;
-      lines.push(
-        <Line
-          key={a}
-          x0={x0}
-          y0={y0}
-          x1={x1}
-          y1={y1}
-          className="line"
-          borderWidth={this.lineBorderWidth}
-        />
-      );
-    }
 
-    return <div>{lines}</div>;
+      return <div>{lines}</div>;
+    }
   };
 
   renderLandmarks = () => {

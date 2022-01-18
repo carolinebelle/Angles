@@ -21,12 +21,16 @@ export default class Circle extends React.Component {
     let b = this.props.y0 - this.props.y1;
     let radius = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
     let diameter = radius * 2;
+    let border = this.props.color
+      ? "2px solid " + this.props.color
+      : "2px solid red";
+
     this.style = {
       position: "absolute",
       width: diameter,
       height: diameter,
       borderRadius: "50%",
-      border: "2px solid red", //this.props.borderWidth + " solid red",
+      border: border, //this.props.borderWidth + " solid red",
       top: this.props.y1 - radius,
       left: this.props.x1 - radius,
       pointerEvents: "none",
