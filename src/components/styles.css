@@ -21,6 +21,7 @@ body,
   flex-basis: 50px;
   z-index: 10;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.7);
+  user-select: none;
 }
 
 .TitleBox {
@@ -52,7 +53,7 @@ body,
   background-color: rgba(89, 108, 158, 0.541);
 }
 .TextBox:active {
-  background-color: rgba(40, 48, 71, 0.226);
+  border: 2px solid rgba(89, 108, 158, 0.541);
 }
 
 button.upload {
@@ -98,6 +99,7 @@ button.upload:active {
   height: 90vh;
   max-height: 100%;
   max-width: 100%;
+  user-select: none;
 }
 
 .PreviewImg {
@@ -110,6 +112,7 @@ button.upload:active {
   cursor: pointer;
   position: absolute;
   z-index: 9;
+  user-select: none;
 }
 
 .Overlay.drag {

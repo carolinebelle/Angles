@@ -11,7 +11,7 @@ import withPasteUpload from "@rpldy/upload-paste";
 import UploadDropZone from "@rpldy/upload-drop-zone";
 import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
-import { FaBalanceScaleRight, FaTrashAlt } from "react-icons/fa";
+import { FaTrashAlt } from "react-icons/fa";
 
 const maxPoints = 8;
 
