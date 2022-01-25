@@ -1,5 +1,3 @@
-// TODO: Creates 8 landmarks, must be able to receive positions and export positions
-
 import React from "react";
 import "./styles.css";
 

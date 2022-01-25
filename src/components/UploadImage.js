@@ -2,6 +2,8 @@ import React, { useState, useCallback, useRef } from "react";
 import "./styles.css";
 import styled from "styled-components";
 import Uploady, {
+  useBatchAddListener,
+  useBatchFinishListener,
   useItemProgressListener,
   useItemStartListener,
 } from "@rpldy/uploady";
@@ -12,6 +14,9 @@ import UploadDropZone from "@rpldy/upload-drop-zone";
 import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
 import { FaTrashAlt } from "react-icons/fa";
+import { HiOutlineLogout } from "react-icons/hi";
+import { logout, storageRef } from "../Firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 const maxPoints = 8;
 
@@ -137,20 +142,13 @@ const UploadProgress = () => {
   );
 };
 
-const CustomImagePreview = ({ id, url, handler, scaler }) => {
-  const [completed, setCompleted] = useState(0);
+const CustomImagePreview = ({ url, handler, scaler }) => {
   const imgRef = useRef(null);
 
   const onImgLoad = ({ target: img }) => {
     handler(img.offsetLeft, img.offsetTop, img.width, img.height);
     scaler(img.naturalWidth, img.naturalHeight);
   };
-
-  useItemProgressListener((item) => {
-    if (item.id === id) {
-      setCompleted(item.completed);
-    }
-  });
 
   function handleResize() {
     if (imgRef) {
@@ -168,7 +166,6 @@ const CustomImagePreview = ({ id, url, handler, scaler }) => {
         className="PreviewImg"
         onLoad={onImgLoad}
         src={url}
-        completed={completed}
       ></img>
     </div>
   );
@@ -182,6 +179,7 @@ const UploadWithProgressPreview = () => {
   const [height, setHeight] = useState(0);
   const [realWidth, setRealWidth] = useState(0);
   const [realHeight, setRealHeight] = useState(0);
+  const [url, setUrl] = useState(null);
 
   const getPreviewProps = useCallback(
     (item) => ({ id: item.id, handler: setCoords, scaler: setReal }),
@@ -189,7 +187,67 @@ const UploadWithProgressPreview = () => {
   );
 
   useItemStartListener(() => {
+    console.log("reset");
     reset();
+  });
+
+  useBatchAddListener((batch) => {
+    let images = batch.items;
+    images.forEach((image) => {
+      let file = image.file;
+      let imageRef = ref(storageRef, file.name);
+      let uploadTask = uploadBytesResumable(imageRef, file);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log("Upload is " + progress + "% done");
+          switch (snapshot.state) {
+            case "paused":
+              console.log("Upload is paused");
+              break;
+            case "running":
+              console.log("Upload is running");
+              break;
+          }
+        },
+        (error) => {
+          // A full list of error codes is available at
+          // https://firebase.google.com/docs/storage/web/handle-errors
+          switch (error.code) {
+            case "storage/unauthorized":
+              // User doesn't have permission to access the object
+              break;
+            case "storage/canceled":
+              // User canceled the upload
+              break;
+
+            // ...
+
+            case "storage/unknown":
+              // Unknown error occurred, inspect error.serverResponse
+              break;
+          }
+        },
+        () => {
+          // Upload completed successfully, now we can get the download URL
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            console.log("File available at", downloadURL);
+            setUrl(downloadURL);
+          });
+        }
+      );
+
+      console.log(image.file.name);
+    });
+    console.log(
+      `batch ${batch.id} finished uploading with ${batch.items.length} items`
+    );
+    console.log("not uploading image with uploady");
+    return false;
   });
 
   const reset = () => {
@@ -211,12 +269,16 @@ const UploadWithProgressPreview = () => {
   return (
     <div className="App">
       <div className="Header">
-        <div className="TitleBox">Segment</div>
+        <div className="TitleBox">
+          Segment
+          <HiOutlineLogout className="logout" onClick={logout} />
+        </div>
+
         <UploadButton className="upload">Upload Files</UploadButton>
       </div>
       <div className="Content">
         <div className="Announcements">
-          UPDATED 01/18/22: femoral head masking
+          UPDATED 01/19/22: fixed paste to upload
         </div>
         <div className="progressbar">
           <UploadProgress />

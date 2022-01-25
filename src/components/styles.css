@@ -25,6 +25,7 @@ body,
 }
 
 .TitleBox {
+  display: flex;
   flex-basis: 70px;
   max-width: 33vw;
   font-size: 3em;
@@ -237,4 +238,7 @@ button.upload:active {
 }
 .reset:active {
   background-color: rgba(40, 48, 71, 0.363);
+}
+.logout:hover {
+  color: rgba(89, 108, 158, 0.877);
 }

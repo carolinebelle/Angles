@@ -12,6 +12,7 @@ import { Stage, Layer } from "react-konva";
 
 //TODO: selectively delete points and lines
 
+// Start at L5 then L4, L3, L2, L1, S1, Femoral head 1 and Femoral head 2
 const order = [5, 4, 3, 2, 1, 0, 6, 7];
 
 export default class Overlay extends React.Component {
