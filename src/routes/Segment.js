@@ -2,12 +2,11 @@ import UploadImage from "../components/UploadImage";
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
-import { auth, db } from "../Firebase";
-import { query, collection, getDocs, where } from "firebase/firestore";
+import { auth, db, collection, addDoc, getDocs } from "../Firebase";
 
 function Segment() {
   const [user, loading, error] = useAuthState(auth);
-  const [name, setName] = useState("");
+
   const navigate = useNavigate();
   // const fetchUserName = async () => {
   //   try {
@@ -20,11 +19,37 @@ function Segment() {
   //     alert("An error occured while fetching user data");
   //   }
   // };
+  const testWrite = async () => {
+    try {
+      const docRef = await addDoc(collection(db, "users"), {
+        first: "Alan",
+        middle: "Mathison",
+        last: "Turing",
+        born: 1912,
+      });
+
+      console.log("Document written with ID: ", docRef.id);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+  };
+
+  const testRead = async () => {
+    const querySnapshot = await getDocs(collection(db, "users"));
+    querySnapshot.forEach((doc) => {
+      console.log(`${doc.id} => ${doc.data()}`);
+    });
+  };
+
   useEffect(() => {
     if (loading) return;
     if (!user) return navigate("/Segmentation/");
-    // fetchUserName();
   }, [user, loading]);
-  return <UploadImage />;
+
+  return (
+    <>
+      <UploadImage />
+    </>
+  );
 }
 export default Segment;

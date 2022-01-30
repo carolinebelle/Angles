@@ -13,8 +13,9 @@ import {
   collection,
   where,
   addDoc,
+  onSnapshot,
 } from "firebase/firestore";
-import { getStorage, ref } from "firebase/storage";
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -63,4 +64,11 @@ export {
   sendPasswordReset,
   logout,
   storageRef,
+  collection,
+  addDoc,
+  getDocs,
+  onSnapshot,
+  getStorage,
+  ref,
+  getDownloadURL,
 };

@@ -1,22 +1,16 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useRef } from "react";
 import "./styles.css";
 import styled from "styled-components";
-import Uploady, {
-  useBatchAddListener,
-  useBatchFinishListener,
-  useItemProgressListener,
-  useItemStartListener,
-} from "@rpldy/uploady";
+import Uploady, { useBatchAddListener } from "@rpldy/uploady";
 import UploadButton from "@rpldy/upload-button";
-import UploadPreview from "@rpldy/upload-preview";
 import withPasteUpload from "@rpldy/upload-paste";
 import UploadDropZone from "@rpldy/upload-drop-zone";
 import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
-import { FaTrashAlt } from "react-icons/fa";
-import { HiOutlineLogout } from "react-icons/hi";
+import { HiOutlineLogout, HiTrash } from "react-icons/hi";
 import { logout, storageRef } from "../Firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import Drawer from "./Drawer";
 
 const maxPoints = 8;
 
@@ -83,7 +77,7 @@ const testData1 = [
   ],
 ];
 
-const testData2 = new Array(8);
+const empty = new Array(8);
 
 const testData3 = [
   ,
@@ -112,7 +106,6 @@ const testData3 = [
 ];
 
 const StyledDropZone = styled(UploadDropZone)`n
-  border: 1px solid rgb(128, 155, 230);
   height: 100%;
   width: 100%;
   display: flex;
@@ -121,16 +114,9 @@ const StyledDropZone = styled(UploadDropZone)`n
 
 const PasteUploadDropZone = withPasteUpload(StyledDropZone);
 
-const UploadProgress = () => {
-  const [progress, setProgess] = useState(0);
-
-  const progressData = useItemProgressListener();
-
-  if (progressData && progressData.completed > progress) {
-    setProgess(() => progressData.completed);
-  }
-  return (
-    progressData && (
+const UploadProgress = (progress) => {
+  if (progress && progress < 100) {
+    return (
       <Line
         style={{ height: "10px", zIndex: 0 }}
         strokeWidth={2}
@@ -138,37 +124,42 @@ const UploadProgress = () => {
         opacity={progress === 100 ? 0 : 1}
         percent={progress}
       />
-    )
-  );
+    );
+  }
+  return null;
 };
 
 const CustomImagePreview = ({ url, handler, scaler }) => {
-  const imgRef = useRef(null);
+  if (url) {
+    const imgRef = useRef(null);
 
-  const onImgLoad = ({ target: img }) => {
-    handler(img.offsetLeft, img.offsetTop, img.width, img.height);
-    scaler(img.naturalWidth, img.naturalHeight);
-  };
+    const onImgLoad = ({ target: img }) => {
+      handler(img.offsetLeft, img.offsetTop, img.width, img.height);
+      scaler(img.naturalWidth, img.naturalHeight);
+    };
 
-  function handleResize() {
-    if (imgRef) {
-      let rect = imgRef.current.getBoundingClientRect();
-      handler(rect.left, rect.top, rect.width, rect.height);
+    function handleResize() {
+      if (imgRef) {
+        let rect = imgRef.current.getBoundingClientRect();
+        handler(rect.left, rect.top, rect.width, rect.height);
+      }
     }
+
+    window.addEventListener("resize", handleResize);
+
+    return (
+      <div className="PreviewContainer">
+        <img
+          ref={imgRef}
+          className="PreviewImg"
+          onLoad={onImgLoad}
+          src={url}
+        ></img>
+      </div>
+    );
+  } else {
+    return null;
   }
-
-  window.addEventListener("resize", handleResize);
-
-  return (
-    <div className="PreviewContainer">
-      <img
-        ref={imgRef}
-        className="PreviewImg"
-        onLoad={onImgLoad}
-        src={url}
-      ></img>
-    </div>
-  );
 };
 
 const UploadWithProgressPreview = () => {
@@ -179,75 +170,86 @@ const UploadWithProgressPreview = () => {
   const [height, setHeight] = useState(0);
   const [realWidth, setRealWidth] = useState(0);
   const [realHeight, setRealHeight] = useState(0);
+  const [percent, setPercent] = useState(null);
+
   const [url, setUrl] = useState(null);
+  const [accession, setAccession] = useState(null);
+  const [xray, setXray] = useState(null);
+  const [data, setData] = useState(empty);
 
-  const getPreviewProps = useCallback(
-    (item) => ({ id: item.id, handler: setCoords, scaler: setReal }),
-    []
-  );
-
-  useItemStartListener(() => {
-    console.log("reset");
-    reset();
-  });
+  const emptyData = () => {
+    setData(empty);
+  };
 
   useBatchAddListener((batch) => {
-    let images = batch.items;
-    images.forEach((image) => {
-      let file = image.file;
-      let imageRef = ref(storageRef, file.name);
-      let uploadTask = uploadBytesResumable(imageRef, file);
+    if (accession) {
+      console.log("reset before taking items in useBatchAddListener");
+      reset();
+      setUrl(null);
+      setXray("new");
+      setData(empty);
+      let images = batch.items;
+      images.forEach((image) => {
+        let file = image.file;
+        let imageRef = ref(storageRef, file.name);
+        let uploadTask = uploadBytesResumable(imageRef, file);
 
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log("Upload is " + progress + "% done");
-          switch (snapshot.state) {
-            case "paused":
-              console.log("Upload is paused");
-              break;
-            case "running":
-              console.log("Upload is running");
-              break;
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+            setPercent(progress);
+            switch (snapshot.state) {
+              case "paused":
+                console.log("Upload is paused");
+                break;
+              case "running":
+                console.log("Upload is running");
+                break;
+            }
+          },
+          (error) => {
+            // A full list of error codes is available at
+            // https://firebase.google.com/docs/storage/web/handle-errors
+            switch (error.code) {
+              case "storage/unauthorized":
+                // User doesn't have permission to access the object
+                break;
+              case "storage/canceled":
+                // User canceled the upload
+                break;
+
+              // ...
+
+              case "storage/unknown":
+                // Unknown error occurred, inspect error.serverResponse
+                break;
+            }
+          },
+          () => {
+            // Upload completed successfully, now we can get the download URL
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              console.log("File available at", downloadURL);
+              setUrl(downloadURL);
+            });
           }
-        },
-        (error) => {
-          // A full list of error codes is available at
-          // https://firebase.google.com/docs/storage/web/handle-errors
-          switch (error.code) {
-            case "storage/unauthorized":
-              // User doesn't have permission to access the object
-              break;
-            case "storage/canceled":
-              // User canceled the upload
-              break;
+        );
 
-            // ...
-
-            case "storage/unknown":
-              // Unknown error occurred, inspect error.serverResponse
-              break;
-          }
-        },
-        () => {
-          // Upload completed successfully, now we can get the download URL
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            console.log("File available at", downloadURL);
-            setUrl(downloadURL);
-          });
-        }
+        console.log(image.file.name);
+      });
+      console.log(
+        `batch ${batch.id} finished uploading with ${batch.items.length} items`
       );
-
-      console.log(image.file.name);
-    });
-    console.log(
-      `batch ${batch.id} finished uploading with ${batch.items.length} items`
-    );
-    console.log("not uploading image with uploady");
-    return false;
+      console.log("not uploading image with uploady");
+      return false;
+    } else {
+      alert(
+        "Add an accession or choose to add to an existing accession to begin uploading."
+      );
+    }
   });
 
   const reset = () => {
@@ -266,43 +268,62 @@ const UploadWithProgressPreview = () => {
     setRealHeight(height);
   };
 
+  const placeholder = () => {
+    if (!accession) {
+      return <button />;
+    }
+  };
+
   return (
     <div className="App">
       <div className="Header">
         <div className="TitleBox">
+          <Drawer
+            url={setUrl}
+            accession={setAccession}
+            xray={setXray}
+            masks={setData}
+            emptyData={emptyData}
+          />
           Segment
-          <HiOutlineLogout className="logout" onClick={logout} />
+          <HiOutlineLogout className="click_icon" onClick={logout} />
         </div>
 
         <UploadButton className="upload">Upload Files</UploadButton>
       </div>
       <div className="Content">
         <div className="Announcements">
-          UPDATED 01/19/22: fixed paste to upload
+          {accession
+            ? accession +
+              " (" +
+              (xray ? xray : "UPLOAD AN IMAGE TO BEGIN MASKING") +
+              ")"
+            : "SELECT ACCESSION TO UPLOAD"}
         </div>
         <div className="progressbar">
-          <UploadProgress />
+          <UploadProgress progress={percent} />
         </div>
-        <PasteUploadDropZone id="dropzone" params={{ test: "paste" }}>
-          <UploadPreview
-            previewComponentProps={getPreviewProps}
-            PreviewComponent={CustomImagePreview}
-          />
-          <Overlay
-            key={itemNum}
-            data={testData2}
-            points={new Array(maxPoints)}
-            top={y0}
-            left={x0}
-            imgWidth={width}
-            imgHeight={height}
-            realWidth={realWidth}
-            realHeight={realHeight}
-          />
+        <PasteUploadDropZone className="dropzone" params={{ test: "paste" }}>
+          <CustomImagePreview url={url} handler={setCoords} scaler={setReal} />
+          {accession == null || xray == null ? (
+            placeholder()
+          ) : (
+            <Overlay
+              key={itemNum}
+              data={data}
+              points={new Array(maxPoints)}
+              top={y0}
+              left={x0}
+              imgWidth={width}
+              imgHeight={height}
+              realWidth={realWidth}
+              realHeight={realHeight}
+            />
+          )}
         </PasteUploadDropZone>
       </div>
       <div onClick={reset} className="reset">
-        <FaTrashAlt />
+        <HiTrash />
       </div>
     </div>
   );
