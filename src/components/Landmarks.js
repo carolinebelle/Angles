@@ -25,7 +25,11 @@ export default class Landmarks extends React.Component {
       let count = 0;
       let i = 0;
       while (i < this.props.points.length) {
-        if (this.props.points[i]) {
+        if (
+          this.props.points[i] &&
+          this.props.points[i][0] &&
+          this.props.points[i][1]
+        ) {
           points.push(
             <div
               key={i}

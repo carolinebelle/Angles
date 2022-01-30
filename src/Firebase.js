@@ -7,6 +7,7 @@ import {
   signOut,
 } from "firebase/auth";
 import {
+  Timestamp,
   getFirestore,
   query,
   getDocs,
@@ -14,6 +15,10 @@ import {
   where,
   addDoc,
   onSnapshot,
+  doc,
+  setDoc,
+  updateDoc,
+  deleteField,
 } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
@@ -71,4 +76,9 @@ export {
   getStorage,
   ref,
   getDownloadURL,
+  Timestamp,
+  doc,
+  setDoc,
+  updateDoc,
+  deleteField,
 };

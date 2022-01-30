@@ -68,12 +68,38 @@ button.upload {
   color: rgba(128, 155, 230);
   text-transform: uppercase;
   font-weight: bolder;
+  cursor: pointer;
 }
 button.upload:hover {
   border: 2px solid rgba(128, 155, 230, 0.541);
 }
 button.upload:active {
   background-color: rgba(40, 48, 71, 0.226);
+}
+
+.accession {
+  color: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 20vw;
+  height: 15vh;
+  font-size: 22px;
+  background-color: rgba(128, 155, 230, 1);
+  border: 2px solid rgb(141, 163, 224);
+  border-radius: 5px;
+  text-transform: uppercase;
+  font-weight: bolder;
+  cursor: pointer;
+}
+.accession:hover {
+  background-color: rgba(128, 155, 230, 0.8);
+  border: 2px solid rgba(128, 155, 230, 0.5);
+}
+.accession:active {
+  background-color: rgba(128, 155, 230, 0.5);
+  border: 2px solid rgba(128, 155, 230, 0.3);
 }
 
 .Content {
@@ -99,6 +125,7 @@ button.upload:active {
 
 .dropzone {
   flex: 1;
+  align-items: center;
 }
 
 .PreviewContainer {

@@ -20,7 +20,7 @@ export default function Drawer(props) {
     props.xray(null);
     props.url(null);
     props.emptyData();
-    alert("add accession");
+    props.add(true);
   };
 
   const toggleDrawer = (open) => (event) => {

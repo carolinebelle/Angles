@@ -53,7 +53,6 @@ export default function Accession(props) {
     } else {
       props.masks(masks);
     }
-    alert("set image: " + file);
     props.drawer(false);
   };
 
@@ -62,7 +61,6 @@ export default function Accession(props) {
     props.xray(null);
     props.url(null);
     props.emptyData();
-    alert("add xray");
     props.drawer(false);
   };
 

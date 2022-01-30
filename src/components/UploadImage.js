@@ -8,9 +8,13 @@ import UploadDropZone from "@rpldy/upload-drop-zone";
 import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
 import { HiOutlineLogout, HiTrash } from "react-icons/hi";
-import { logout, storageRef } from "../Firebase";
+import { logout, storageRef, doc, db } from "../Firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import Drawer from "./Drawer";
+import { GrChapterAdd } from "react-icons/gr";
+import Button from "@mui/material/Button";
+import AddAccession from "./AddAccession";
+import AddXray from "./AddXray";
 
 const maxPoints = 8;
 
@@ -139,9 +143,11 @@ const CustomImagePreview = ({ url, handler, scaler }) => {
     };
 
     function handleResize() {
-      if (imgRef) {
+      if (imgRef && imgRef.current) {
         let rect = imgRef.current.getBoundingClientRect();
-        handler(rect.left, rect.top, rect.width, rect.height);
+        if (rect) {
+          handler(rect.left, rect.top, rect.width, rect.height);
+        }
       }
     }
 
@@ -172,22 +178,27 @@ const UploadWithProgressPreview = () => {
   const [realHeight, setRealHeight] = useState(0);
   const [percent, setPercent] = useState(null);
 
+  const [filename, setFilename] = useState(null);
   const [url, setUrl] = useState(null);
   const [accession, setAccession] = useState(null);
   const [xray, setXray] = useState(null);
   const [data, setData] = useState(empty);
 
+  const [addAccession, setAddAccession] = useState(false);
+  const [addXray, setAddXray] = useState(false);
+
   const emptyData = () => {
     setData(empty);
   };
 
+  React.useEffect(() => {
+    reset();
+  }, [url]);
+
   useBatchAddListener((batch) => {
     if (accession) {
-      console.log("reset before taking items in useBatchAddListener");
-      reset();
-      setUrl(null);
       setXray("new");
-      setData(empty);
+
       let images = batch.items;
       images.forEach((image) => {
         let file = image.file;
@@ -231,6 +242,8 @@ const UploadWithProgressPreview = () => {
           },
           () => {
             // Upload completed successfully, now we can get the download URL
+            setFilename(file.name);
+            setAddXray(true);
             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
               console.log("File available at", downloadURL);
               setUrl(downloadURL);
@@ -270,7 +283,17 @@ const UploadWithProgressPreview = () => {
 
   const placeholder = () => {
     if (!accession) {
-      return <button />;
+      return (
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setAddAccession(true);
+          }}
+        >
+          <GrChapterAdd />
+          Add Accession
+        </Button>
+      );
     }
   };
 
@@ -281,6 +304,7 @@ const UploadWithProgressPreview = () => {
           <Drawer
             url={setUrl}
             accession={setAccession}
+            add={setAddAccession}
             xray={setXray}
             masks={setData}
             emptyData={emptyData}
@@ -288,8 +312,9 @@ const UploadWithProgressPreview = () => {
           Segment
           <HiOutlineLogout className="click_icon" onClick={logout} />
         </div>
-
-        <UploadButton className="upload">Upload Files</UploadButton>
+        {accession == null ? null : (
+          <UploadButton className="upload">Upload Files</UploadButton>
+        )}
       </div>
       <div className="Content">
         <div className="Announcements">
@@ -309,6 +334,7 @@ const UploadWithProgressPreview = () => {
             placeholder()
           ) : (
             <Overlay
+              xray={doc(db, "accessions/" + accession + "/X-rays", xray)}
               key={itemNum}
               data={data}
               points={new Array(maxPoints)}
@@ -325,6 +351,18 @@ const UploadWithProgressPreview = () => {
       <div onClick={reset} className="reset">
         <HiTrash />
       </div>
+      <AddAccession
+        open={addAccession}
+        handler={setAddAccession}
+        updater={setAccession}
+      />
+      <AddXray
+        open={addXray}
+        handler={setAddXray}
+        updater={setXray}
+        accession={accession}
+        file={filename}
+      />
     </div>
   );
 };
