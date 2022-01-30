@@ -6,14 +6,19 @@ export default class Mask extends Component {
     super(props);
     this.state = {
       active: this.props.active ? this.props.active : false,
+      controller: this.props.controller ? true : false,
     };
 
     this.onClick = this.onClick.bind(this);
   }
 
   onClick() {
-    this.setState({ active: !this.state.active });
-    this.props.toggleLevel(this.props.index);
+    if (this.state.controller) {
+      this.props.toggleLevel();
+    } else {
+      this.setState({ active: !this.state.active });
+      this.props.toggleLevel(this.props.index);
+    }
   }
 
   render() {

@@ -1,0 +1,44 @@
+.login {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+}
+.login__container {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  background-color: #dcdcdc;
+  padding: 30px;
+}
+.login__textBox {
+  padding: 10px;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+.login__btn {
+  padding: 10px;
+  font-size: 18px;
+  margin-bottom: 10px;
+  border: none;
+  color: white;
+  background-color: rgb(128, 155, 230);
+}
+.login__text {
+  display: flex;
+  justify-content: center;
+}
+.login__register {
+  text-decoration: underline;
+  font-weight: bold;
+}
+.login__register:hover {
+  background-color: rgba(128, 155, 230, 0.5);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.login div {
+  margin-top: 7px;
+}

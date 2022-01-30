@@ -1,17 +1,20 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useRef } from "react";
 import "./styles.css";
 import styled from "styled-components";
-import Uploady, {
-  useItemProgressListener,
-  useItemStartListener,
-} from "@rpldy/uploady";
+import Uploady, { useBatchAddListener } from "@rpldy/uploady";
 import UploadButton from "@rpldy/upload-button";
-import UploadPreview from "@rpldy/upload-preview";
 import withPasteUpload from "@rpldy/upload-paste";
 import UploadDropZone from "@rpldy/upload-drop-zone";
 import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
-import { FaTrashAlt } from "react-icons/fa";
+import { HiOutlineLogout, HiTrash } from "react-icons/hi";
+import { logout, storageRef, doc, db } from "../Firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import Drawer from "./Drawer";
+import { GrChapterAdd } from "react-icons/gr";
+import Button from "@mui/material/Button";
+import AddAccession from "./AddAccession";
+import AddXray from "./AddXray";
 
 const maxPoints = 8;
 
@@ -78,7 +81,7 @@ const testData1 = [
   ],
 ];
 
-const testData2 = new Array(8);
+const empty = new Array(8);
 
 const testData3 = [
   ,
@@ -107,7 +110,6 @@ const testData3 = [
 ];
 
 const StyledDropZone = styled(UploadDropZone)`n
-  border: 1px solid rgb(128, 155, 230);
   height: 100%;
   width: 100%;
   display: flex;
@@ -116,16 +118,9 @@ const StyledDropZone = styled(UploadDropZone)`n
 
 const PasteUploadDropZone = withPasteUpload(StyledDropZone);
 
-const UploadProgress = () => {
-  const [progress, setProgess] = useState(0);
-
-  const progressData = useItemProgressListener();
-
-  if (progressData && progressData.completed > progress) {
-    setProgess(() => progressData.completed);
-  }
-  return (
-    progressData && (
+const UploadProgress = (progress) => {
+  if (progress && progress < 100) {
+    return (
       <Line
         style={{ height: "10px", zIndex: 0 }}
         strokeWidth={2}
@@ -133,45 +128,44 @@ const UploadProgress = () => {
         opacity={progress === 100 ? 0 : 1}
         percent={progress}
       />
-    )
-  );
+    );
+  }
+  return null;
 };
 
-const CustomImagePreview = ({ id, url, handler, scaler }) => {
-  const [completed, setCompleted] = useState(0);
-  const imgRef = useRef(null);
+const CustomImagePreview = ({ url, handler, scaler }) => {
+  if (url) {
+    const imgRef = useRef(null);
 
-  const onImgLoad = ({ target: img }) => {
-    handler(img.offsetLeft, img.offsetTop, img.width, img.height);
-    scaler(img.naturalWidth, img.naturalHeight);
-  };
+    const onImgLoad = ({ target: img }) => {
+      handler(img.offsetLeft, img.offsetTop, img.width, img.height);
+      scaler(img.naturalWidth, img.naturalHeight);
+    };
 
-  useItemProgressListener((item) => {
-    if (item.id === id) {
-      setCompleted(item.completed);
+    function handleResize() {
+      if (imgRef && imgRef.current) {
+        let rect = imgRef.current.getBoundingClientRect();
+        if (rect) {
+          handler(rect.left, rect.top, rect.width, rect.height);
+        }
+      }
     }
-  });
 
-  function handleResize() {
-    if (imgRef) {
-      let rect = imgRef.current.getBoundingClientRect();
-      handler(rect.left, rect.top, rect.width, rect.height);
-    }
+    window.addEventListener("resize", handleResize);
+
+    return (
+      <div className="PreviewContainer">
+        <img
+          ref={imgRef}
+          className="PreviewImg"
+          onLoad={onImgLoad}
+          src={url}
+        ></img>
+      </div>
+    );
+  } else {
+    return null;
   }
-
-  window.addEventListener("resize", handleResize);
-
-  return (
-    <div className="PreviewContainer">
-      <img
-        ref={imgRef}
-        className="PreviewImg"
-        onLoad={onImgLoad}
-        src={url}
-        completed={completed}
-      ></img>
-    </div>
-  );
 };
 
 const UploadWithProgressPreview = () => {
@@ -182,14 +176,93 @@ const UploadWithProgressPreview = () => {
   const [height, setHeight] = useState(0);
   const [realWidth, setRealWidth] = useState(0);
   const [realHeight, setRealHeight] = useState(0);
+  const [percent, setPercent] = useState(null);
 
-  const getPreviewProps = useCallback(
-    (item) => ({ id: item.id, handler: setCoords, scaler: setReal }),
-    []
-  );
+  const [filename, setFilename] = useState(null);
+  const [url, setUrl] = useState(null);
+  const [accession, setAccession] = useState(null);
+  const [xray, setXray] = useState(null);
+  const [data, setData] = useState(empty);
 
-  useItemStartListener(() => {
+  const [addAccession, setAddAccession] = useState(false);
+  const [addXray, setAddXray] = useState(false);
+
+  const emptyData = () => {
+    setData(empty);
+  };
+
+  React.useEffect(() => {
     reset();
+  }, [url]);
+
+  useBatchAddListener((batch) => {
+    if (accession) {
+      setXray("new");
+
+      let images = batch.items;
+      images.forEach((image) => {
+        let file = image.file;
+        let imageRef = ref(storageRef, file.name);
+        let uploadTask = uploadBytesResumable(imageRef, file);
+
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+            setPercent(progress);
+            switch (snapshot.state) {
+              case "paused":
+                console.log("Upload is paused");
+                break;
+              case "running":
+                console.log("Upload is running");
+                break;
+            }
+          },
+          (error) => {
+            // A full list of error codes is available at
+            // https://firebase.google.com/docs/storage/web/handle-errors
+            switch (error.code) {
+              case "storage/unauthorized":
+                // User doesn't have permission to access the object
+                break;
+              case "storage/canceled":
+                // User canceled the upload
+                break;
+
+              // ...
+
+              case "storage/unknown":
+                // Unknown error occurred, inspect error.serverResponse
+                break;
+            }
+          },
+          () => {
+            // Upload completed successfully, now we can get the download URL
+            setFilename(file.name);
+            setAddXray(true);
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              console.log("File available at", downloadURL);
+              setUrl(downloadURL);
+            });
+          }
+        );
+
+        console.log(image.file.name);
+      });
+      console.log(
+        `batch ${batch.id} finished uploading with ${batch.items.length} items`
+      );
+      console.log("not uploading image with uploady");
+      return false;
+    } else {
+      alert(
+        "Add an accession or choose to add to an existing accession to begin uploading."
+      );
+    }
   });
 
   const reset = () => {
@@ -208,40 +281,88 @@ const UploadWithProgressPreview = () => {
     setRealHeight(height);
   };
 
+  const placeholder = () => {
+    if (!accession) {
+      return (
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setAddAccession(true);
+          }}
+        >
+          <GrChapterAdd />
+          Add Accession
+        </Button>
+      );
+    }
+  };
+
   return (
     <div className="App">
       <div className="Header">
-        <div className="TitleBox">Segment</div>
-        <UploadButton className="upload">Upload Files</UploadButton>
+        <div className="TitleBox">
+          <Drawer
+            url={setUrl}
+            accession={setAccession}
+            add={setAddAccession}
+            xray={setXray}
+            masks={setData}
+            emptyData={emptyData}
+          />
+          Segment
+          <HiOutlineLogout className="click_icon" onClick={logout} />
+        </div>
+        {accession == null ? null : (
+          <UploadButton className="upload">Upload Files</UploadButton>
+        )}
       </div>
       <div className="Content">
         <div className="Announcements">
-          UPDATED 01/18/22: femoral head masking
+          {accession
+            ? accession +
+              " (" +
+              (xray ? xray : "UPLOAD AN IMAGE TO BEGIN MASKING") +
+              ")"
+            : "SELECT ACCESSION TO UPLOAD"}
         </div>
         <div className="progressbar">
-          <UploadProgress />
+          <UploadProgress progress={percent} />
         </div>
-        <PasteUploadDropZone id="dropzone" params={{ test: "paste" }}>
-          <UploadPreview
-            previewComponentProps={getPreviewProps}
-            PreviewComponent={CustomImagePreview}
-          />
-          <Overlay
-            key={itemNum}
-            data={testData2}
-            points={new Array(maxPoints)}
-            top={y0}
-            left={x0}
-            imgWidth={width}
-            imgHeight={height}
-            realWidth={realWidth}
-            realHeight={realHeight}
-          />
+        <PasteUploadDropZone className="dropzone" params={{ test: "paste" }}>
+          <CustomImagePreview url={url} handler={setCoords} scaler={setReal} />
+          {accession == null || xray == null ? (
+            placeholder()
+          ) : (
+            <Overlay
+              xray={doc(db, "accessions/" + accession + "/X-rays", xray)}
+              key={itemNum}
+              data={data}
+              points={new Array(maxPoints)}
+              top={y0}
+              left={x0}
+              imgWidth={width}
+              imgHeight={height}
+              realWidth={realWidth}
+              realHeight={realHeight}
+            />
+          )}
         </PasteUploadDropZone>
       </div>
       <div onClick={reset} className="reset">
-        <FaTrashAlt />
+        <HiTrash />
       </div>
+      <AddAccession
+        open={addAccession}
+        handler={setAddAccession}
+        updater={setAccession}
+      />
+      <AddXray
+        open={addXray}
+        handler={setAddXray}
+        updater={setXray}
+        accession={accession}
+        file={filename}
+      />
     </div>
   );
 };

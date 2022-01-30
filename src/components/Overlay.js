@@ -10,8 +10,11 @@ import Mask from "./Mask";
 import LevelButton from "./LevelButton";
 import { Stage, Layer } from "react-konva";
 
+import { updateDoc, deleteField } from "../Firebase";
+
 //TODO: selectively delete points and lines
 
+// Start at L5 then L4, L3, L2, L1, S1, Femoral head 1 and Femoral head 2
 const order = [5, 4, 3, 2, 1, 0, 6, 7];
 
 export default class Overlay extends React.Component {
@@ -19,7 +22,7 @@ export default class Overlay extends React.Component {
     super(props);
 
     this.state = {
-      landmarks: this.props.data,
+      landmarks: this.toNestedArray(this.props.data),
       currentLevel: -1, //default to L5
 
       anteriorLeft: true,
@@ -31,6 +34,7 @@ export default class Overlay extends React.Component {
 
       points: new Array(8),
       startPoints: new Array(8),
+      editing: false,
     };
 
     this.lineBorderWidth = 2;
@@ -60,6 +64,10 @@ export default class Overlay extends React.Component {
 
     //femoral heads
     this.activeCircle = this.activeCircle.bind(this);
+
+    this.isEditing = this.isEditing.bind(this);
+    this.fromNestedArray = this.fromNestedArray.bind(this);
+    this.toNestedArray = this.toNestedArray.bind(this);
   }
 
   maxPoints = 8;
@@ -401,6 +409,7 @@ export default class Overlay extends React.Component {
   };
 
   onDoubleClick(e) {
+    this.setState({ editing: true });
     let index = order.indexOf(this.state.currentLevel);
     if (index == -1) {
       index = order[0];
@@ -722,38 +731,109 @@ export default class Overlay extends React.Component {
     return { x, y };
   }
 
-  render() {
-    return (
-      <>
-        <div
-          onClick={this.onClick}
-          onDoubleClick={this.onDoubleClick}
-          onMouseMove={this.onMouseMove}
-          className="Overlay"
-          style={{
-            top: this.props.top,
-            left: this.props.left,
-            width: this.props.imgWidth,
-            height: this.props.imgHeight,
-          }}
-        >
-          {this.renderPoints()}
-          {this.activeDraw()}
-          {this.activeLine()}
-          {this.renderLines()}
-          {this.renderLandmarks()}
-          {this.renderMasks()}
-        </div>
-        <div id="copytext">{this.getAngles()}</div>
-        <div className="switch">
-          <Switch
-            onChange={this.anteriorSide}
-            checked={this.state.anteriorLeft}
-            onColor="#809be6"
-            offColor="#000000"
-          />
-        </div>
+  fromNestedArray(arr) {
+    let flatArray = new Array(52);
+    let index = 0;
+
+    //vertebra
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 8; j++) {
+        for (let k = 0; k < 2; k++) {
+          if (arr[i] && arr[i][j] && arr[i][j][k]) {
+            flatArray[index] = arr[i][j][k];
+          } else {
+            flatArray[index] = null;
+          }
+          index += 1;
+        }
+      }
+    }
+    //femoral heads
+    for (let i = 6; i < 8; i++) {
+      for (let j = 0; j < 2; j++) {
+        for (let k = 0; k < 2; k++) {
+          if (arr[i] && arr[i][j] && arr[i][j][k]) {
+            flatArray[index] = arr[i][j][k];
+          } else {
+            flatArray[index] = null;
+          }
+          index += 1;
+        }
+      }
+    }
+
+    return flatArray;
+  }
+
+  toNestedArray(arr) {
+    let nestedArray = new Array(8);
+    let index = 0;
+
+    //vertebra
+    for (let i = 0; i < 6; i++) {
+      nestedArray[i] = new Array(8);
+      for (let j = 0; j < 8; j++) {
+        nestedArray[i][j] = new Array(2);
+        if (!arr[index] && !arr[index + 1]) {
+          nestedArray[i][j] = null;
+          index += 2;
+        } else {
+          for (let k = 0; k < 2; k++) {
+            nestedArray[i][j][k] = arr[index] ? arr[index] : null;
+            index += 1;
+          }
+        }
+      }
+    }
+
+    //femoral heads
+    for (let i = 6; i < 8; i++) {
+      nestedArray[i] = new Array(2);
+      for (let j = 0; j < 2; j++) {
+        nestedArray[i][j] = new Array(2);
+        if (!arr[index] && !arr[index + 1]) {
+          nestedArray[i][j] = null;
+          index += 2;
+        } else {
+          for (let k = 0; k < 2; k++) {
+            nestedArray[i][j][k] = arr[index] ? arr[index] : null;
+            index += 1;
+          }
+        }
+      }
+    }
+
+    return nestedArray;
+  }
+
+  isEditing() {
+    if (this.state.editing) {
+      return (
         <div className="rightPanel">
+          <LevelButton
+            index={100}
+            level={"SAVE"}
+            active={this.state.editing}
+            toggleLevel={async () => {
+              console.log(this.state.landmarks);
+              try {
+                await updateDoc(this.props.xray, {
+                  masks: deleteField(),
+                });
+              } catch (e) {
+                console.error("Error deleting masks field for document: ", e);
+              }
+              try {
+                await updateDoc(this.props.xray, {
+                  masks: this.fromNestedArray(this.state.landmarks),
+                });
+              } catch (e) {
+                console.error("Error updating masks for document: ", e);
+              }
+              this.setState({ editing: false });
+            }}
+            controller={true}
+          />
           <LevelButton
             index={1}
             level={"L1"}
@@ -803,6 +883,56 @@ export default class Overlay extends React.Component {
             toggleLevel={this.toggleLevel}
           />
         </div>
+      );
+    } else {
+      return (
+        <div className="rightPanel">
+          <LevelButton
+            index={100}
+            level={"EDIT"}
+            active={this.state.editing}
+            toggleLevel={() => {
+              this.setState({ editing: true });
+            }}
+            controller={true}
+          />
+        </div>
+      );
+    }
+  }
+
+  render() {
+    return (
+      <>
+        <div
+          onClick={this.onClick}
+          onDoubleClick={this.onDoubleClick}
+          onMouseMove={this.onMouseMove}
+          className="Overlay"
+          style={{
+            top: this.props.top,
+            left: this.props.left,
+            width: this.props.imgWidth,
+            height: this.props.imgHeight,
+          }}
+        >
+          {this.renderPoints()}
+          {this.activeDraw()}
+          {this.activeLine()}
+          {this.renderLines()}
+          {this.renderLandmarks()}
+          {this.renderMasks()}
+        </div>
+        <div id="copytext">{this.getAngles()}</div>
+        <div className="switch">
+          <Switch
+            onChange={this.anteriorSide}
+            checked={this.state.anteriorLeft}
+            onColor="#809be6"
+            offColor="#000000"
+          />
+        </div>
+        {this.isEditing()}
       </>
     );
   }

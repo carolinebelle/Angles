@@ -1,5 +1,3 @@
-// TODO: Creates 8 landmarks, must be able to receive positions and export positions
-
 import React from "react";
 import "./styles.css";
 
@@ -7,16 +5,6 @@ import "./styles.css";
 export default class Circle extends React.Component {
   constructor(props) {
     super(props);
-    console.log(
-      "circle: " +
-        this.props.x0 +
-        ", " +
-        this.props.y0 +
-        " and " +
-        this.props.x1 +
-        ", " +
-        this.props.y1
-    );
     let a = this.props.x0 - this.props.x1;
     let b = this.props.y0 - this.props.y1;
     let radius = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
