@@ -18,29 +18,31 @@ import Collapse from "@mui/material/Collapse";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import { BsFillFileImageFill } from "react-icons/bs";
+import Confirmation from "./Confirmation";
 
 export default function Accession(props) {
   const [expand, setExpand] = React.useState(false);
   const [date, setDate] = React.useState(props.date);
   const [done, setDone] = React.useState(props.done);
   const [xrays, setXrays] = React.useState(null);
+  const [confirmAdd, setConfirmAdd] = React.useState(false);
+  const [confirmSet, setConfirmSet] = React.useState(false);
+  const [id, setID] = React.useState(null);
+  const [file, setFile] = React.useState(null);
+  const [masks, setMasks] = React.useState(null);
 
   const onClick = () => {
-    xrays.forEach((doc) => {
-      console.log(doc);
-    });
     setExpand(!expand);
   };
 
   const setImage = async (id, file, masks) => {
+    console.log("set image");
     props.accession(props.id);
     props.xray(id);
 
     const storage = getStorage();
     getDownloadURL(ref(storage, file))
       .then((url) => {
-        // `url` is the download URL for 'images/stars.jpg'
-        console.log("url: " + url);
         props.url(url);
       })
       .catch((error) => {
@@ -57,6 +59,7 @@ export default function Accession(props) {
   };
 
   const addImage = () => {
+    console.log("add image");
     props.accession(props.id);
     props.xray(null);
     props.url(null);
@@ -72,9 +75,7 @@ export default function Accession(props) {
           <ListItemButton
             sx={{ pl: 4 }}
             key={doc.id}
-            onClick={() => {
-              setImage(doc.id, doc.data().file, doc.data().masks);
-            }}
+            onClick={() => setImage(doc.id, doc.data().file, doc.data().masks)}
           >
             <ListItemIcon>
               <BsFillFileImageFill />
@@ -93,12 +94,7 @@ export default function Accession(props) {
   const add = () => {
     return (
       <ListItem key={"add"} disablePadding>
-        <ListItemButton
-          sx={{ pl: 4 }}
-          onClick={() => {
-            addImage();
-          }}
-        >
+        <ListItemButton sx={{ pl: 4 }} onClick={() => addImage()}>
           <ListItemIcon>
             <GrChapterAdd />
           </ListItemIcon>
@@ -109,9 +105,6 @@ export default function Accession(props) {
   };
 
   React.useEffect(() => {
-    console.log("Done:" + done);
-    console.log("Date:" + date);
-
     const unsubscribe = onSnapshot(
       collection(db, "accessions/" + props.id + "/X-rays"),
       (QuerySnapshot) => {

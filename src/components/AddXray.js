@@ -22,9 +22,6 @@ export default function AddXray(props) {
   const handleChangeViewType = (event) => {
     setViewType(event.target.value);
   };
-  const cancel = () => {
-    props.handler(false);
-  };
 
   const handleClose = async () => {
     //TODO: validate data
@@ -97,7 +94,6 @@ export default function AddXray(props) {
         </FormControl>
       </DialogContent>
       <DialogActions>
-        <Button onClick={cancel}>Cancel</Button>
         <Button onClick={handleClose}>Save</Button>
       </DialogActions>
     </Dialog>

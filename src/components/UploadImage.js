@@ -15,6 +15,8 @@ import { GrChapterAdd } from "react-icons/gr";
 import Button from "@mui/material/Button";
 import AddAccession from "./AddAccession";
 import AddXray from "./AddXray";
+import { v4 as uuid } from "uuid";
+import Confirmation from "./Confirmation";
 
 const maxPoints = 8;
 
@@ -78,6 +80,14 @@ const testData1 = [
     [676, 544],
     [640, 557],
     [633.5, 522.5],
+  ],
+  [
+    [627, 492],
+    [663.5, 486],
+  ],
+  [
+    [627, 492],
+    [663.5, 486],
   ],
 ];
 
@@ -186,6 +196,9 @@ const UploadWithProgressPreview = () => {
 
   const [addAccession, setAddAccession] = useState(false);
   const [addXray, setAddXray] = useState(false);
+  const [unsavedChanges, setunsavedChanges] = useState(false);
+  const [confirmation, setConfirmation] = useState(false);
+  const [pendingBatch, setPendingBatch] = useState(null);
 
   const emptyData = () => {
     setData(empty);
@@ -195,14 +208,16 @@ const UploadWithProgressPreview = () => {
     reset();
   }, [url]);
 
-  useBatchAddListener((batch) => {
+  const loadImg = (batch) => {
     if (accession) {
       setXray("new");
 
       let images = batch.items;
       images.forEach((image) => {
         let file = image.file;
-        let imageRef = ref(storageRef, file.name);
+        let fileName = file.name.split(".");
+        let fileID = uuid() + "." + fileName[fileName.length - 1];
+        let imageRef = ref(storageRef, fileID);
         let uploadTask = uploadBytesResumable(imageRef, file);
 
         uploadTask.on(
@@ -242,10 +257,10 @@ const UploadWithProgressPreview = () => {
           },
           () => {
             // Upload completed successfully, now we can get the download URL
-            setFilename(file.name);
+            setFilename(fileID);
             setAddXray(true);
             getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-              console.log("File available at", downloadURL);
+              console.log(fileID + " available at", downloadURL);
               setUrl(downloadURL);
             });
           }
@@ -257,11 +272,19 @@ const UploadWithProgressPreview = () => {
         `batch ${batch.id} finished uploading with ${batch.items.length} items`
       );
       console.log("not uploading image with uploady");
-      return false;
     } else {
       alert(
         "Add an accession or choose to add to an existing accession to begin uploading."
       );
+    }
+  };
+
+  useBatchAddListener((batch) => {
+    if (unsavedChanges) {
+      setConfirmation(true);
+      setPendingBatch(batch);
+    } else {
+      loadImg(batch);
     }
   });
 
@@ -297,6 +320,18 @@ const UploadWithProgressPreview = () => {
     }
   };
 
+  // const confirm = (func) => {
+  //   console.log("seeking confirmation");
+  //   if (unsavedChanges) {
+  //     console.log("unsaved changes detected");
+  //     setPendingFunc(() => func);
+  //     setConfirmation(true);
+  //   } else {
+  //     console.log("no unsaved changes");
+  //     func();
+  //   }
+  // };
+
   return (
     <div className="App">
       <div className="Header">
@@ -308,6 +343,8 @@ const UploadWithProgressPreview = () => {
             xray={setXray}
             masks={setData}
             emptyData={emptyData}
+            request={(func) => confirm(func)}
+            unsaved={unsavedChanges}
           />
           Segment
           <HiOutlineLogout className="click_icon" onClick={logout} />
@@ -344,12 +381,10 @@ const UploadWithProgressPreview = () => {
               imgHeight={height}
               realWidth={realWidth}
               realHeight={realHeight}
+              edits={setunsavedChanges}
             />
           )}
         </PasteUploadDropZone>
-      </div>
-      <div onClick={reset} className="reset">
-        <HiTrash />
       </div>
       <AddAccession
         open={addAccession}
@@ -362,6 +397,17 @@ const UploadWithProgressPreview = () => {
         updater={setXray}
         accession={accession}
         file={filename}
+      />
+      <Confirmation
+        open={confirmation}
+        function={() => loadImg(pendingBatch)}
+        question={"Unsaved changes."}
+        explanation={
+          "You have unsaved edits. Are you sure you wish to load a new x-ray without first saving your edits?"
+        }
+        confirm={"Discard Edits"}
+        cancel={"Return to Edits"}
+        handler={setConfirmation}
       />
     </div>
   );

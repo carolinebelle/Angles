@@ -1,5 +1,7 @@
 //TODO: polygon shaded in based on set of vertices (display only)
 import React, { Component } from "react";
+import "./styles.css";
+import { HiTrash } from "react-icons/hi";
 
 export default class Mask extends Component {
   constructor(props) {
@@ -23,11 +25,25 @@ export default class Mask extends Component {
 
   render() {
     return (
-      <div
-        className={this.props.active ? "buttonLevelSelected" : "buttonLevel"}
-        onClick={this.onClick}
-      >
-        {this.props.level}
+      <div className="level">
+        <div
+          className={this.props.active ? "buttonLevelSelected" : "buttonLevel"}
+          onClick={this.onClick}
+        >
+          {this.props.level}
+        </div>
+        {this.props.active ? (
+          <div
+            onClick={
+              this.props.index == 100
+                ? () => this.props.delete()
+                : () => this.props.delete(this.props.index)
+            }
+            className="reset"
+          >
+            <HiTrash />
+          </div>
+        ) : null}
       </div>
     );
   }

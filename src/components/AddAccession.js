@@ -24,17 +24,20 @@ export default function AddAccession(props) {
     //send to firestore
     try {
       // const docRef = await addDoc(collection(db, "accessions"), {
+      let dateVal = document.getElementById("date").value;
+      let patientVal = document.getElementById("patient").value;
       await setDoc(doc(db, "accessions", document.getElementById("id").value), {
         created: Timestamp.now(),
-        date: Timestamp.fromDate(
-          new Date(document.getElementById("date").value)
-        ),
+        date: dateVal ? Timestamp.fromDate(new Date(dateVal)) : null,
         done: false,
-        patient: document.getElementById("patient").value,
+        patient: patientVal ? patientVal : null,
       });
 
       props.updater(document.getElementById("id").value);
     } catch (e) {
+      if (!document.getElementById("id").value) {
+        console.log("You must provide an accession ID");
+      }
       console.error("Error adding document: ", e);
     }
 

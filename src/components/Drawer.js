@@ -9,12 +9,15 @@ import { HiMenu } from "react-icons/hi";
 import { GrChapterAdd } from "react-icons/gr";
 import ListItemButton from "@mui/material/ListItemButton";
 import Accession from "./Accession";
+import Confirmation from "./Confirmation";
 
 export default function Drawer(props) {
   const [state, setState] = React.useState(false);
   const [list, setList] = React.useState([]);
+  const [confirmation, setConfirmation] = React.useState(false);
 
   const addAccession = () => {
+    console.log("add accession");
     setState(false);
     props.accession(null);
     props.xray(null);
@@ -69,7 +72,12 @@ export default function Drawer(props) {
   const add = () => {
     return (
       <ListItem key={"add"} disablePadding>
-        <ListItemButton divider={true} onClick={() => addAccession()}>
+        <ListItemButton
+          divider={true}
+          onClick={
+            props.unsaved ? () => setConfirmation(true) : () => addAccession()
+          }
+        >
           <ListItemIcon>
             <GrChapterAdd />
           </ListItemIcon>
@@ -100,6 +108,17 @@ export default function Drawer(props) {
           {list}
         </List>
       </SwipeableDrawer>
+      <Confirmation
+        open={confirmation}
+        function={() => addAccession()}
+        question={"Unsaved changes."}
+        explanation={
+          "You have unsaved edits. Are you sure you wish to load a new x-ray without first saving your edits?"
+        }
+        confirm={"Discard Edits"}
+        cancel={"Return to Edits"}
+        handler={setConfirmation}
+      />
     </>
   );
 }
