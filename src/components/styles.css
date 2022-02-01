@@ -161,45 +161,51 @@ button.upload:active {
   justify-content: space-around;
   position: fixed;
   right: 2vw;
-  bottom: 20vh;
+  bottom: 10vh;
   width: 5vw;
-  height: 50vh;
+  height: 70vh;
   z-index: 10;
 }
 
-.buttonLevel {
-  flex: 1;
+.level {
+  display: flex;
   position: relative;
+  z-index: 11;
+  height: 5vh;
+  justify-content: center;
+  margin: 5px;
+}
+
+.buttonLevel {
   background-color: transparent;
   border: 2px solid rgb(128, 155, 230);
   color: #fff;
   text-align: center;
   box-shadow: 2px 2px 3px #999;
   z-index: 11;
+  height: 100%;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: auto;
   cursor: pointer;
-  margin: 2px;
 }
 .buttonLevelSelected {
-  flex: 1;
-  position: relative;
-  height: auto;
   background-color: rgb(128, 155, 230);
   border: 2px solid rgb(128, 155, 230);
   color: black;
   text-align: center;
   box-shadow: 2px 2px 3px #999;
   z-index: 11;
+  height: 100%;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: auto;
   cursor: pointer;
   font-weight: bolder;
-  margin: 2px;
 }
 .buttonLevelSelected:hover {
   background-color: rgba(89, 108, 158, 0.75);
@@ -251,25 +257,25 @@ button.upload:active {
 }
 
 .reset {
-  position: fixed;
-  width: 60px;
-  height: 60px;
-  bottom: 1vw;
-  right: 1vw;
-  background-color: rgb(128, 155, 230);
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(128, 155, 230, 0.753);
   color: #fff;
   border-radius: 50px;
-  box-shadow: 2px 2px 3px #999;
-  z-index: 11;
+  z-index: 12;
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
 }
 .reset:hover {
-  background-color: rgba(89, 108, 158, 0.877);
+  background-color: rgba(226, 79, 79, 0.671);
 }
 .reset:active {
-  background-color: rgba(40, 48, 71, 0.363);
+  background-color: red;
 }
 .click_icon:hover {
   color: rgba(89, 108, 158, 0.877);

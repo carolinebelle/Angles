@@ -41,11 +41,10 @@ function Segment() {
     });
   };
 
-  // AIRPLANE MODE
-  // useEffect(() => {
-  //   if (loading) return;
-  //   if (!user) return navigate("/Segmentation/");
-  // }, [user, loading]);
+  useEffect(() => {
+    if (loading) return;
+    if (!user) return navigate("/Segmentation/");
+  }, [user, loading]);
 
   return (
     <>

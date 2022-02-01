@@ -9,6 +9,7 @@ import Switch from "react-switch";
 import Mask from "./Mask";
 import LevelButton from "./LevelButton";
 import { Stage, Layer } from "react-konva";
+import Confirmation from "./Confirmation";
 
 import { updateDoc, deleteField } from "../Firebase";
 
@@ -35,6 +36,14 @@ export default class Overlay extends React.Component {
       points: new Array(8),
       startPoints: new Array(8),
       editing: false,
+
+      //confirmation control
+      needConfirmation: false,
+      functionToConfirm: null,
+      question: "Confirm [action]",
+      explantaion: "Would you like to confirm [action]",
+      confirm: "Confirm",
+      cancel: "Cancel",
     };
 
     this.lineBorderWidth = 2;
@@ -68,6 +77,11 @@ export default class Overlay extends React.Component {
     this.isEditing = this.isEditing.bind(this);
     this.fromNestedArray = this.fromNestedArray.bind(this);
     this.toNestedArray = this.toNestedArray.bind(this);
+    this.copyLandmarks = this.copyLandmarks.bind(this);
+
+    this.completeDelete = this.completeDelete.bind(this);
+    this.levelDelete = this.levelDelete.bind(this);
+    this.confirmedDelete = this.confirmedDelete.bind(this);
   }
 
   maxPoints = 8;
@@ -80,6 +94,41 @@ export default class Overlay extends React.Component {
   }
 
   /* Level control **********************************************/
+
+  completeDelete() {
+    console.log("complete delete");
+    this.setState({
+      needConfirmation: true,
+      functionToConfirm: this.confirmedDelete,
+      question: "Delete all mask data?",
+      explantaion: "This action is irreversible.",
+      confirm: "Delete All",
+      cancel: "Cancel",
+    });
+  }
+
+  levelDelete(index) {
+    console.log("level delete");
+    if (this.state.currentLevel == index) {
+      const femHeads = index == 6 || index == 7;
+      let landmarks = this.copyLandmarks();
+      landmarks[index] = femHeads ? new Array(2) : new Array(this.maxPoints);
+      this.setState({
+        landmarks: landmarks,
+        points: femHeads ? new Array(2) : new Array(this.maxPoints),
+        startPoints: new Array(this.maxPoints),
+      });
+    }
+  }
+
+  confirmedDelete() {
+    console.log("confirmed delete");
+    this.setState({
+      landmarks: new Array(8),
+      points: new Array(this.maxPoints),
+      startPoints: new Array(this.maxPoints),
+    });
+  }
 
   toggleLevel(level) {
     console.log("toggle level: " + level);
@@ -107,26 +156,7 @@ export default class Overlay extends React.Component {
       }
     }
 
-    let newLandmarks = new Array(this.state.landmarks.length);
-
-    //copy landmarks
-    for (let i = 0; i < newLandmarks.length; i++) {
-      if (this.state.landmarks[i]) {
-        let vert = new Array(this.state.landmarks[i].length);
-        for (let j = 0; j < this.state.landmarks[i].length; j++) {
-          if (this.state.landmarks[i][j]) {
-            vert[j] = [...this.state.landmarks[i][j]];
-          }
-        }
-        newLandmarks[i] = vert;
-      } else {
-        if (i == 6 || i == 7) {
-          newLandmarks[i] = new Array(2); //only need 2 points for femoral heads
-        } else {
-          newLandmarks[i] = new Array(this.maxPoints);
-        }
-      }
-    }
+    let newLandmarks = this.copyLandmarks();
 
     if (this.state.currentLevel != -1) {
       newLandmarks[this.state.currentLevel] = toSave;
@@ -157,6 +187,31 @@ export default class Overlay extends React.Component {
     } else {
       this.canDraw(level, toLoad);
     }
+  }
+
+  copyLandmarks() {
+    let newLandmarks = new Array(this.state.landmarks.length);
+
+    //copy landmarks
+    for (let i = 0; i < newLandmarks.length; i++) {
+      if (this.state.landmarks[i]) {
+        let vert = new Array(this.state.landmarks[i].length);
+        for (let j = 0; j < this.state.landmarks[i].length; j++) {
+          if (this.state.landmarks[i][j]) {
+            vert[j] = [...this.state.landmarks[i][j]];
+          }
+        }
+        newLandmarks[i] = vert;
+      } else {
+        if (i == 6 || i == 7) {
+          newLandmarks[i] = new Array(2); //only need 2 points for femoral heads
+        } else {
+          newLandmarks[i] = new Array(this.maxPoints);
+        }
+      }
+    }
+
+    return newLandmarks;
   }
 
   /* Editing current level **********************************/
@@ -833,54 +888,63 @@ export default class Overlay extends React.Component {
               this.setState({ editing: false });
             }}
             controller={true}
+            delete={this.completeDelete}
           />
           <LevelButton
             index={1}
             level={"L1"}
             active={1 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
+            delete={this.levelDelete}
           />
           <LevelButton
             index={2}
             level={"L2"}
             active={2 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
+            delete={this.levelDelete}
           />
           <LevelButton
             index={3}
             level={"L3"}
             active={3 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
+            delete={this.levelDelete}
           />
           <LevelButton
             index={4}
             level={"L4"}
             active={4 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
+            delete={this.levelDelete}
           />
           <LevelButton
             index={5}
             level={"L5"}
             active={5 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
+            delete={this.levelDelete}
           />
           <LevelButton
             index={0}
             level={"S1"}
             active={0 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
+            delete={this.levelDelete}
           />
           <LevelButton
             index={6}
             level={"F1"}
             active={6 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
+            delete={this.levelDelete}
           />
           <LevelButton
             index={7}
             level={"F2"}
             active={7 == this.state.currentLevel ? true : false}
             toggleLevel={this.toggleLevel}
+            delete={this.levelDelete}
           />
         </div>
       );
@@ -888,9 +952,9 @@ export default class Overlay extends React.Component {
       return (
         <div className="rightPanel">
           <LevelButton
-            index={100}
+            index={101}
             level={"EDIT"}
-            active={this.state.editing}
+            active={false}
             toggleLevel={() => {
               this.setState({ editing: true });
             }}
@@ -933,6 +997,15 @@ export default class Overlay extends React.Component {
           />
         </div>
         {this.isEditing()}
+        <Confirmation
+          open={this.state.needConfirmation}
+          function={this.state.functionToConfirm}
+          question={this.state.question}
+          explanation={this.state.explantaion}
+          confirm={this.state.confirm}
+          cancel={this.state.cancel}
+          handler={(bool) => this.setState({ needConfirmation: bool })}
+        />
       </>
     );
   }
