@@ -360,7 +360,7 @@ const UploadWithProgressPreview = () => {
               " (" +
               (xray ? xray : "UPLOAD AN IMAGE TO BEGIN MASKING") +
               ")"
-            : "SELECT ACCESSION TO UPLOAD"}
+            : "02/01/22 Bug fix and delete feature patch"}
         </div>
         <div className="progressbar">
           <UploadProgress progress={percent} />
