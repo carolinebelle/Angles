@@ -146,13 +146,17 @@ export default class Overlay extends React.Component {
 
     let existingData = this.state.landmarks[level]; //does data already exist for this level?
 
-    for (let i = 0; i < this.state.points.length; i++) {
+    for (let i = 0; i < toSave.length; i++) {
       if (this.state.points[i]) {
         //creating copy of current set of points
         toSave[i] = [...this.state.points[i]];
       }
+    }
+
+    for (let i = 0; i < toLoad.length; i++) {
       if (existingData) {
         if (this.state.landmarks[level][i]) {
+          //creating copy of set of points to load
           toLoad[i] = [...this.state.landmarks[level][i]];
           newCurrent[i] = [...this.state.landmarks[level][i]];
         }
