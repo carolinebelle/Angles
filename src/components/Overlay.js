@@ -82,6 +82,7 @@ export default class Overlay extends React.Component {
     this.completeDelete = this.completeDelete.bind(this);
     this.levelDelete = this.levelDelete.bind(this);
     this.confirmedDelete = this.confirmedDelete.bind(this);
+    this.save = this.save.bind(this);
   }
 
   maxPoints = 8;
@@ -117,6 +118,8 @@ export default class Overlay extends React.Component {
         landmarks: landmarks,
         points: femHeads ? new Array(2) : new Array(this.maxPoints),
         startPoints: new Array(this.maxPoints),
+        draw: true,
+        active: false,
       });
     }
   }
@@ -268,7 +271,6 @@ export default class Overlay extends React.Component {
 
   // dynamically draws circle based on mouse position and first point of femoral head
   activeCircle = () => {
-    console.log("active circle being called");
     let coords;
     let x0;
     let y0;
@@ -295,7 +297,6 @@ export default class Overlay extends React.Component {
     if (this.state.active && this.state.mouseX && this.state.mouseY) {
       let coords;
       if (this.state.currentLevel == 6 || this.state.currentLevel == 7) {
-        console.log("state current level: " + this.state.currentLevel);
         return this.activeCircle();
       } else {
         let x0;
@@ -465,6 +466,7 @@ export default class Overlay extends React.Component {
 
   onDoubleClick(e) {
     this.setState({ editing: true });
+    this.props.edits(true);
     let index = order.indexOf(this.state.currentLevel);
     if (index == -1) {
       index = order[0];
@@ -861,6 +863,29 @@ export default class Overlay extends React.Component {
     return nestedArray;
   }
 
+  async save() {
+    this.toggleLevel(-1);
+    this.state.landmarks[this.state.currentLevel] = this.state.points;
+    console.log(this.state.landmarks);
+
+    try {
+      await updateDoc(this.props.xray, {
+        masks: deleteField(),
+      });
+    } catch (e) {
+      console.error("Error deleting masks field for document: ", e);
+    }
+    try {
+      await updateDoc(this.props.xray, {
+        masks: this.fromNestedArray(this.state.landmarks),
+      });
+    } catch (e) {
+      console.error("Error updating masks for document: ", e);
+    }
+    this.setState({ editing: false });
+    this.props.edits(false);
+  }
+
   isEditing() {
     if (this.state.editing) {
       return (
@@ -869,24 +894,7 @@ export default class Overlay extends React.Component {
             index={100}
             level={"SAVE"}
             active={this.state.editing}
-            toggleLevel={async () => {
-              console.log(this.state.landmarks);
-              try {
-                await updateDoc(this.props.xray, {
-                  masks: deleteField(),
-                });
-              } catch (e) {
-                console.error("Error deleting masks field for document: ", e);
-              }
-              try {
-                await updateDoc(this.props.xray, {
-                  masks: this.fromNestedArray(this.state.landmarks),
-                });
-              } catch (e) {
-                console.error("Error updating masks for document: ", e);
-              }
-              this.setState({ editing: false });
-            }}
+            toggleLevel={this.save}
             controller={true}
             delete={this.completeDelete}
           />
@@ -957,6 +965,7 @@ export default class Overlay extends React.Component {
             active={false}
             toggleLevel={() => {
               this.setState({ editing: true });
+              this.props.edits(true);
             }}
             controller={true}
           />
