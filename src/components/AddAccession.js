@@ -9,6 +9,7 @@ import { Timestamp, doc, setDoc, db } from "../Firebase";
 import DesktopDatePicker from "@mui/lab/DesktopDatePicker";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
+import { v4 as uuid } from "uuid";
 
 export default function AddAccession(props) {
   const [open, setOpen] = React.useState(props.open);
@@ -26,18 +27,18 @@ export default function AddAccession(props) {
       // const docRef = await addDoc(collection(db, "accessions"), {
       let dateVal = document.getElementById("date").value;
       let patientVal = document.getElementById("patient").value;
-      await setDoc(doc(db, "accessions", document.getElementById("id").value), {
+      let id = document.getElementById("id").value;
+      if (!id) id = uuid();
+
+      await setDoc(doc(db, "accessions", id), {
         created: Timestamp.now(),
         date: dateVal ? Timestamp.fromDate(new Date(dateVal)) : null,
         done: false,
         patient: patientVal ? patientVal : null,
       });
 
-      props.updater(document.getElementById("id").value);
+      props.updater(id);
     } catch (e) {
-      if (!document.getElementById("id").value) {
-        console.log("You must provide an accession ID");
-      }
       console.error("Error adding document: ", e);
     }
 
@@ -54,7 +55,6 @@ export default function AddAccession(props) {
       <img src={props.url} />
       <DialogContent>
         <TextField
-          required
           autoFocus
           margin="dense"
           id="id"
