@@ -134,6 +134,9 @@ export default class Overlay extends React.Component {
   }
 
   toggleLevel(level) {
+    if (this.state.currentLevel == -1 && level != -1) {
+      this.setState({ editing: true });
+    }
     console.log("toggle level: " + level);
     let toSave =
       this.state.currentLevel == 6 || this.state.currentLevel == 7
