@@ -23,7 +23,7 @@ export default class Overlay extends React.Component {
     super(props);
 
     this.state = {
-      landmarks: this.toNestedArray(this.props.data),
+      landmarks: this.props.data, //this.props.data is a large array [x1, y1, x2, y2, etc...]
       currentLevel: -1, //default to L5
 
       anteriorLeft: true,
@@ -901,7 +901,7 @@ export default class Overlay extends React.Component {
             index={100}
             level={"SAVE"}
             active={this.state.editing}
-            toggleLevel={this.save}
+            toggleLevel={() => alert("save disabled while figuring this out")} //{this.save} TEMP EDIT
             controller={true}
             delete={this.completeDelete}
           />
