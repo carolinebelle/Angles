@@ -124,6 +124,7 @@ export default class Overlay extends React.Component {
   }
 
   confirmedDelete() {
+    this.toggleLevel(-1);
     this.setState({
       landmarks: new Array(this.state.landmarks.length),
       points: new Array(this.maxPoints * 2),
@@ -132,6 +133,7 @@ export default class Overlay extends React.Component {
   }
 
   toggleLevel(level) {
+    console.log("toggle: " + level);
     if (!this.state.active) {
       if (this.state.currentLevel == -1 && level != -1) {
         this.setState({ editing: true });
@@ -217,6 +219,7 @@ export default class Overlay extends React.Component {
   /* Editing current level **********************************/
 
   canDraw(level, points) {
+    console.log("can draw");
     let currentLevel = level || level == 0 ? level : this.state.currentLevel;
     let currentPoints = points ? points : this.state.startPoints;
 
@@ -899,17 +902,23 @@ export default class Overlay extends React.Component {
 
   toNestedArray(arr) {
     const splits = [8, 8, 8, 8, 8, 8, 2, 2];
-    if (splits.reduce((partialSum, a) => partialSum + a) * 2 == arr.length) {
-      let nestedArray = new Array(splits.length);
-      let index = 0;
+    const total = splits.reduce((partialSum, a) => partialSum + a) * 2;
+    const valid = total == arr.length;
+    let nestedArray = new Array(splits.length);
+    let index = 0;
 
-      for (let i = 0; i < nestedArray.length; i++) {
+    for (let i = 0; i < nestedArray.length; i++) {
+      if (valid) {
         nestedArray[i] = arr.slice(index, index + splits[i] * 2);
-        index += splits[i] * 2;
+      } else {
+        nestedArray[i] = new Array(splits[i] * 2);
       }
-      return nestedArray;
+      index += splits[i] * 2;
     }
-    console.log("error: length of array is unexpected");
+
+    if (!valid) console.log("error: length of array is unexpected");
+
+    return nestedArray;
   }
 
   async save() {
@@ -924,12 +933,17 @@ export default class Overlay extends React.Component {
     } catch (e) {
       console.error("Error deleting masks field for document: ", e);
     }
-    try {
-      await updateDoc(this.props.xray, {
-        masks: this.fromNestedArray(landmarks),
-      });
-    } catch (e) {
-      console.error("Error updating masks for document: ", e);
+
+    let save = this.fromNestedArray(landmarks);
+    console.log("to save: " + save);
+    if (save) {
+      try {
+        await updateDoc(this.props.xray, {
+          masks: save,
+        });
+      } catch (e) {
+        console.error("Error updating masks for document: ", e);
+      }
     }
 
     this.toggleLevel(-1);
