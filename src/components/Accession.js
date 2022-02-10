@@ -22,14 +22,8 @@ import Confirmation from "./Confirmation";
 
 export default function Accession(props) {
   const [expand, setExpand] = React.useState(false);
-  const [date, setDate] = React.useState(props.date);
   const [done, setDone] = React.useState(props.done);
   const [xrays, setXrays] = React.useState(null);
-  const [confirmAdd, setConfirmAdd] = React.useState(false);
-  const [confirmSet, setConfirmSet] = React.useState(false);
-  const [id, setID] = React.useState(null);
-  const [file, setFile] = React.useState(null);
-  const [masks, setMasks] = React.useState(null);
 
   const onClick = () => {
     setExpand(!expand);
@@ -59,7 +53,6 @@ export default function Accession(props) {
   };
 
   const addImage = () => {
-    console.log("add image");
     props.accession(props.id);
     props.xray(null);
     props.url(null);
@@ -126,7 +119,9 @@ export default function Accession(props) {
           <ListItemIcon>{done ? <FiCheckCircle /> : <FiCircle />}</ListItemIcon>
           <ListItemText
             primary={props.id}
-            secondary={date ? date.toDate().toLocaleDateString("en-US") : ""}
+            secondary={
+              props.date ? props.date.toDate().toLocaleDateString("en-US") : ""
+            }
           />
           {expand ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>

@@ -6,6 +6,8 @@ import "./styles.css";
 export default class Point extends React.Component {
   constructor(props) {
     super(props);
+    console.log("New point: " + this.props.index);
+
     this.state = {
       deltaPosition: {
         x: this.props.x,
@@ -16,6 +18,7 @@ export default class Point extends React.Component {
   }
 
   handleDrag = (e, ui) => {
+    console.log(this.props.index);
     const { x, y } = this.state.deltaPosition;
     this.setState({
       deltaPosition: {

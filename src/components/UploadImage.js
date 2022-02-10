@@ -320,18 +320,6 @@ const UploadWithProgressPreview = () => {
     }
   };
 
-  // const confirm = (func) => {
-  //   console.log("seeking confirmation");
-  //   if (unsavedChanges) {
-  //     console.log("unsaved changes detected");
-  //     setPendingFunc(() => func);
-  //     setConfirmation(true);
-  //   } else {
-  //     console.log("no unsaved changes");
-  //     func();
-  //   }
-  // };
-
   return (
     <div className="App">
       <div className="Header">

@@ -280,3 +280,10 @@ button.upload:active {
 .click_icon:hover {
   color: rgba(89, 108, 158, 0.877);
 }
+
+.viewType {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}

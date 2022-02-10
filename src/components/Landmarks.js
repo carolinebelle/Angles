@@ -24,25 +24,21 @@ export default class Landmarks extends React.Component {
       let points = [];
       let count = 0;
       let i = 0;
-      while (i < this.props.points.length) {
-        if (
-          this.props.points[i] &&
-          this.props.points[i][0] &&
-          this.props.points[i][1]
-        ) {
+      while (i + 1 < this.props.points.length) {
+        if (this.props.points[i] && this.props.points[i + 1]) {
           points.push(
             <div
               key={i}
               className="pointInactive"
               style={{
-                top: this.props.points[i][1] - 7,
-                left: this.props.points[i][0] - 7,
+                top: this.props.points[i + 1] - 7,
+                left: this.props.points[i] - 7,
               }}
             ></div>
           );
           count += 1;
         }
-        i += 1;
+        i += 2;
       }
 
       if (count > 0) {
@@ -52,8 +48,6 @@ export default class Landmarks extends React.Component {
             {this.renderLabel()}
           </div>
         );
-      } else {
-        return <div>{points}</div>;
       }
     }
   };
@@ -64,11 +58,16 @@ export default class Landmarks extends React.Component {
     let x1;
     let y1;
     if (this.props.level == 6 || this.props.level == 7) {
-      if (this.props.points[0] && this.props.points[1]) {
-        x0 = this.props.points[0][0];
-        y0 = this.props.points[0][1];
-        x1 = this.props.points[1][0];
-        y1 = this.props.points[1][1];
+      if (
+        this.props.points[0] &&
+        this.props.points[1] &&
+        this.props.points[2] &&
+        this.props.points[3]
+      ) {
+        x0 = this.props.points[0];
+        y0 = this.props.points[1];
+        x1 = this.props.points[2];
+        y1 = this.props.points[3];
         return (
           <Circle
             key={x0 + ", " + y0 + " and " + x1 + ", " + y1}
@@ -84,18 +83,22 @@ export default class Landmarks extends React.Component {
       let lines = [];
       let coords;
       let a = 0;
-      let b = 1;
-      while (b < this.props.points.length) {
-        if (this.props.points[a] && this.props.points[b]) {
+      while (a + 3 < this.props.points.length) {
+        if (
+          this.props.points[a] &&
+          this.props.points[a + 1] &&
+          this.props.points[a + 2] &&
+          this.props.points[a + 3]
+        ) {
           coords = this.props.translator(
-            this.props.points[a][0],
-            this.props.points[a][1]
+            this.props.points[a],
+            this.props.points[a + 1]
           );
           x0 = coords.x;
           y0 = coords.y;
           coords = this.props.translator(
-            this.props.points[b][0],
-            this.props.points[b][1]
+            this.props.points[a + 2],
+            this.props.points[a + 3]
           );
           x1 = coords.x;
           y1 = coords.y;
@@ -112,19 +115,23 @@ export default class Landmarks extends React.Component {
             />
           );
         }
-        a += 1;
-        b += 1;
+        a += 2;
       }
-      if (this.props.points[a] && this.props.points[0]) {
+      if (
+        this.props.points[a] &&
+        this.props.points[a + 1] &&
+        this.props.points[0] &&
+        this.props.points[1]
+      ) {
         coords = this.props.translator(
-          this.props.points[a][0],
-          this.props.points[a][1]
+          this.props.points[a],
+          this.props.points[a + 1]
         );
         x0 = coords.x;
         y0 = coords.y;
         coords = this.props.translator(
-          this.props.points[0][0],
-          this.props.points[0][1]
+          this.props.points[0],
+          this.props.points[1]
         );
         x1 = coords.x;
         y1 = coords.y;
@@ -149,13 +156,13 @@ export default class Landmarks extends React.Component {
     let x = 0;
     let y = 0;
     let n = 0;
-    this.props.points.forEach((point) => {
-      if (point && point[0] && point[1]) {
+    for (let i = 0; i + 1 < this.props.points.length; i += 2) {
+      if (this.props.points[i] && this.props.points[i + 1]) {
         n += 1;
-        x += point[0];
-        y += point[1];
+        x += this.props.points[i];
+        y += this.props.points[i + 1];
       }
-    });
+    }
     x /= n;
     y /= n;
 
