@@ -1,6 +1,6 @@
 //TODO: polygon shaded in based on set of vertices (display only)
 import React, { Component } from "react";
-import { Shape, Group } from "react-konva";
+import { Shape, Group, Circle } from "react-konva";
 
 export default class Mask extends Component {
   constructor(props) {
@@ -10,11 +10,11 @@ export default class Mask extends Component {
 
   customShape = (context, shape) => {
     context.beginPath();
-    context.moveTo(this.props.points[0][0], this.props.points[0][1]);
-    let i = 1;
-    while (i < this.props.points.length) {
-      context.lineTo(this.props.points[i][0], this.props.points[i][1]);
-      i += 1;
+    context.moveTo(this.props.points[0], this.props.points[1]);
+    let i = 2;
+    while (i + 1 < this.props.points.length) {
+      context.lineTo(this.props.points[i], this.props.points[i + 1]);
+      i += 2;
     }
     context.closePath();
     // (!) Konva specific method, it is very important
@@ -23,8 +23,6 @@ export default class Mask extends Component {
 
   validPoints() {
     if (!this.props.points) {
-      return;
-    } else if (this.props.points.length != 8) {
       return;
     } else if (this.props.points.includes(null)) {
       return;
@@ -37,7 +35,19 @@ export default class Mask extends Component {
       } else {
         fill = "rgba(0, 0, 255, 0.15";
       }
-      return <Shape sceneFunc={this.customShape} fill={fill} />;
+      return this.props.points.length == 4 ? (
+        <Circle
+          x={this.props.points[2]}
+          y={this.props.points[3]}
+          radius={Math.sqrt(
+            Math.pow(this.props.points[2] - this.props.points[0], 2) +
+              Math.pow(this.props.points[3] - this.props.points[1], 2)
+          )}
+          fill={fill}
+        />
+      ) : (
+        <Shape sceneFunc={this.customShape} fill={fill} />
+      );
     }
   }
 
