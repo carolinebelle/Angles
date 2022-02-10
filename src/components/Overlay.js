@@ -101,7 +101,6 @@ export default class Overlay extends React.Component {
   /* Level control **********************************************/
 
   completeDelete() {
-    console.log("complete delete");
     this.setState({
       needConfirmation: true,
       functionToConfirm: this.confirmedDelete,
@@ -113,10 +112,6 @@ export default class Overlay extends React.Component {
   }
 
   levelDelete(index) {
-    console.log("landmarks: " + this.state.landmarks);
-    console.log("points: " + this.state.points);
-    console.log("start of points: " + this.state.startPoints);
-    console.log("level delete");
     if (this.state.currentLevel == index) {
       const femHeads = index == 6 || index == 7;
       this.setState({
@@ -129,7 +124,6 @@ export default class Overlay extends React.Component {
   }
 
   confirmedDelete() {
-    console.log("confirmed delete");
     this.setState({
       landmarks: new Array(this.state.landmarks.length),
       points: new Array(this.maxPoints * 2),
@@ -145,8 +139,6 @@ export default class Overlay extends React.Component {
       } else if (level == -1) {
         this.setState({ editing: false });
       }
-
-      console.log("toggle level: " + level);
 
       let newLandmarks = this.copyLandmarks();
 
@@ -373,7 +365,6 @@ export default class Overlay extends React.Component {
 
   // //call setState to re-render component after updating coordinate of one point
   updatePosition(initial, index, xCoord, yCoord, imgCoords = false) {
-    console.log("points (update position start): " + this.state.points);
     let x = xCoord;
     let y = yCoord;
     if (imgCoords) {
@@ -391,13 +382,11 @@ export default class Overlay extends React.Component {
       updatedPoints[index] = x;
       updatedPoints[index + 1] = y;
 
-      console.log("points (update position initial): " + updatedPoints);
       this.setState({ startPoints: iPoints, points: updatedPoints }); //possible
     } else {
       updatedPoints[index] = x;
       updatedPoints[index + 1] = y;
 
-      console.log("points (update position not initial): " + updatedPoints);
       this.setState({ points: updatedPoints }); //possible
     }
   }
@@ -465,14 +454,10 @@ export default class Overlay extends React.Component {
         }
       });
 
-      console.log("points: " + points);
-      console.log("start points: " + startPoints);
-
       iPoints = [...startPoints];
       updatedPoints = [...points];
     }
 
-    console.log("points (update many): " + updatedPoints);
     this.setState({ startPoints: iPoints, points: updatedPoints }); //possible
   }
 
@@ -931,7 +916,6 @@ export default class Overlay extends React.Component {
     let landmarks = this.copyLandmarks();
     if (this.state.currentLevel != -1)
       landmarks[this.state.currentLevel] = [...this.state.points];
-    console.log(landmarks);
 
     try {
       await updateDoc(this.props.xray, {
@@ -960,7 +944,7 @@ export default class Overlay extends React.Component {
             index={100}
             level={"SAVE"}
             active={this.state.editing}
-            toggleLevel={() => alert("save disabled while figuring this out")} //{this.save} TEMP EDIT
+            toggleLevel={this.save}
             controller={true}
             delete={this.completeDelete}
           />

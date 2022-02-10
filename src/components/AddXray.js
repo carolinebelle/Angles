@@ -54,6 +54,11 @@ export default function AddXray(props) {
       console.error("Error adding document: ", e);
     }
 
+    // reset to defaults
+    setBodypart("Unspecified");
+    setViewType("Unspecified");
+    setSide("Unspecified");
+
     props.handler(false);
   };
 
