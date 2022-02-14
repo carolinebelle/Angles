@@ -4,27 +4,16 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { db, collection, onSnapshot } from "../Firebase";
 import { HiMenu } from "react-icons/hi";
 import { GrChapterAdd } from "react-icons/gr";
 import ListItemButton from "@mui/material/ListItemButton";
-import Accession from "./Accession";
 import Confirmation from "./Confirmation";
+import sample1 from "../images/sample1.jpeg";
 
 export default function Drawer(props) {
   const [state, setState] = React.useState(false);
-  const [list, setList] = React.useState([]);
   const [confirmation, setConfirmation] = React.useState(false);
-
-  const addAccession = () => {
-    console.log("add accession");
-    setState(false);
-    props.accession(null);
-    props.xray(null);
-    props.url(null);
-    props.emptyData();
-    props.add(true);
-  };
+  const files = [sample1, sample1, sample1];
 
   const toggleDrawer = (open) => (event) => {
     if (
@@ -38,35 +27,27 @@ export default function Drawer(props) {
     setState(open);
   };
 
-  const load = async function () {
-    console.log("initiating accessions");
-    const unsubscribe = onSnapshot(
-      collection(db, "accessions"),
-      (QuerySnapshot) => {
-        console.log("updating accessions");
-        let listItems = [];
-        QuerySnapshot.forEach((doc) => {
-          let data = doc.data();
-          listItems.push(
-            <Accession
-              key={doc.id}
-              id={doc.id}
-              done={data.done}
-              date={data.date}
-              drawer={setState}
-              url={props.url}
-              accession={props.accession}
-              xray={props.xray}
-              masks={props.masks}
-              emptyData={props.emptyData}
-            />
-          );
-        });
-        setList(listItems);
-      }
-    );
-
-    return () => unsubscribe();
+  const samples = () => {
+    return files.map((file, index) => {
+      console.log(file);
+      console.log(index);
+      return (
+        <ListItem key={index} disablePadding>
+          <ListItemButton
+            onClick={
+              props.unsaved
+                ? () => setConfirmation(true)
+                : () => props.file(file)
+            }
+          >
+            <ListItemIcon>
+              <GrChapterAdd />
+            </ListItemIcon>
+            <ListItemText primary={"Sample " + (index + 1)} />
+          </ListItemButton>
+        </ListItem>
+      );
+    });
   };
 
   const add = () => {
@@ -87,11 +68,6 @@ export default function Drawer(props) {
     );
   };
 
-  React.useEffect(() => {
-    const unsubscribe = load();
-    return unsubscribe;
-  }, []);
-
   return (
     <>
       <HiMenu className="click_icon" onClick={toggleDrawer(true)} />
@@ -105,7 +81,7 @@ export default function Drawer(props) {
           sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
         >
           {add()}
-          {list}
+          {samples()}
         </List>
       </SwipeableDrawer>
       <Confirmation

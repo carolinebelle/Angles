@@ -13,9 +13,6 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import Drawer from "./Drawer";
 import { GrChapterAdd } from "react-icons/gr";
 import Button from "@mui/material/Button";
-import AddAccession from "./AddAccession";
-import AddXray from "./AddXray";
-import { v4 as uuid } from "uuid";
 import Confirmation from "./Confirmation";
 
 const maxPoints = 8;
@@ -119,32 +116,8 @@ const testData3 = [
   ],
 ];
 
-const StyledDropZone = styled(UploadDropZone)`n
-  height: 100%;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-`;
-
-const PasteUploadDropZone = withPasteUpload(StyledDropZone);
-
-const UploadProgress = (progress) => {
-  if (progress && progress < 100) {
-    return (
-      <Line
-        style={{ height: "10px", zIndex: 0 }}
-        strokeWidth={2}
-        strokeColor={progress === 100 ? "#00a626" : "#2db7f5"}
-        opacity={progress === 100 ? 0 : 1}
-        percent={progress}
-      />
-    );
-  }
-  return null;
-};
-
-const CustomImagePreview = ({ url, handler, scaler }) => {
-  if (url) {
+const CustomImagePreview = ({ file, handler, scaler }) => {
+  if (file) {
     const imgRef = useRef(null);
 
     const onImgLoad = ({ target: img }) => {
@@ -169,7 +142,7 @@ const CustomImagePreview = ({ url, handler, scaler }) => {
           ref={imgRef}
           className="PreviewImg"
           onLoad={onImgLoad}
-          src={url}
+          src={file}
         ></img>
       </div>
     );
@@ -189,7 +162,7 @@ const UploadWithProgressPreview = () => {
   const [percent, setPercent] = useState(null);
 
   const [filename, setFilename] = useState(null);
-  const [url, setUrl] = useState(null);
+  const [file, setFile] = useState(null);
   const [accession, setAccession] = useState(null);
   const [xray, setXray] = useState(null);
   const [data, setData] = useState(empty);
@@ -198,7 +171,6 @@ const UploadWithProgressPreview = () => {
   const [addXray, setAddXray] = useState(false);
   const [unsavedChanges, setunsavedChanges] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
-  const [pendingBatch, setPendingBatch] = useState(null);
 
   const emptyData = () => {
     setData(empty);
@@ -206,7 +178,7 @@ const UploadWithProgressPreview = () => {
 
   React.useEffect(() => {
     reset();
-  }, [url]);
+  }, [file]);
 
   const loadImg = (batch) => {
     if (accession) {
@@ -306,17 +278,7 @@ const UploadWithProgressPreview = () => {
 
   const placeholder = () => {
     if (!accession) {
-      return (
-        <Button
-          variant="outlined"
-          onClick={() => {
-            setAddAccession(true);
-          }}
-        >
-          <GrChapterAdd />
-          Add Accession
-        </Button>
-      );
+      return <div>Choose</div>;
     }
   };
 
@@ -325,7 +287,7 @@ const UploadWithProgressPreview = () => {
       <div className="Header">
         <div className="TitleBox">
           <Drawer
-            url={setUrl}
+            file={setFile}
             accession={setAccession}
             add={setAddAccession}
             xray={setXray}
@@ -334,7 +296,7 @@ const UploadWithProgressPreview = () => {
             request={(func) => confirm(func)}
             unsaved={unsavedChanges}
           />
-          Segment
+          Research
           <HiOutlineLogout className="click_icon" onClick={logout} />
         </div>
         {accession == null ? null : (
@@ -350,11 +312,12 @@ const UploadWithProgressPreview = () => {
               ")"
             : "02/01/22 Bug fix and delete feature patch"}
         </div>
-        <div className="progressbar">
-          <UploadProgress progress={percent} />
-        </div>
-        <PasteUploadDropZone className="dropzone" params={{ test: "paste" }}>
-          <CustomImagePreview url={url} handler={setCoords} scaler={setReal} />
+        <div className="dropzone">
+          <CustomImagePreview
+            file={file}
+            handler={setCoords}
+            scaler={setReal}
+          />
           {accession == null || xray == null ? (
             placeholder()
           ) : (
@@ -372,20 +335,8 @@ const UploadWithProgressPreview = () => {
               edits={setunsavedChanges}
             />
           )}
-        </PasteUploadDropZone>
+        </div>
       </div>
-      <AddAccession
-        open={addAccession}
-        handler={setAddAccession}
-        updater={setAccession}
-      />
-      <AddXray
-        open={addXray}
-        handler={setAddXray}
-        updater={setXray}
-        accession={accession}
-        file={filename}
-      />
       <Confirmation
         open={confirmation}
         function={() => loadImg(pendingBatch)}
