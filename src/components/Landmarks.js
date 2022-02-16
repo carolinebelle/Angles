@@ -34,7 +34,8 @@ export default class Landmarks extends React.Component {
                 top: this.props.points[i + 1] - 7,
                 left: this.props.points[i] - 7,
               }}
-            ></div>
+              onClick={this.onClick}
+            />
           );
           count += 1;
         }
@@ -115,7 +116,7 @@ export default class Landmarks extends React.Component {
             />
           );
         }
-        a += 2;
+        a += 4;
       }
       if (
         this.props.points[a] &&

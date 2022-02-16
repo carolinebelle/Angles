@@ -1,120 +1,12 @@
 import React, { useState, useRef } from "react";
 import "./styles.css";
-import styled from "styled-components";
 import Uploady, { useBatchAddListener } from "@rpldy/uploady";
 import UploadButton from "@rpldy/upload-button";
-import withPasteUpload from "@rpldy/upload-paste";
-import UploadDropZone from "@rpldy/upload-drop-zone";
-import { Line } from "rc-progress";
 import Overlay from "./Overlay.js";
 import { HiOutlineLogout, HiTrash } from "react-icons/hi";
-import { logout, storageRef, doc, db } from "../Firebase";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { logout } from "../Firebase";
 import Drawer from "./Drawer";
-import { GrChapterAdd } from "react-icons/gr";
-import Button from "@mui/material/Button";
 import Confirmation from "./Confirmation";
-
-const maxPoints = 8;
-
-const testData1 = [
-  [
-    [653, 581],
-    [683.5, 562],
-    [714, 543],
-    [731, 566],
-    [748, 589],
-    [729.5, 601.5],
-    [711, 614],
-    [682, 597.5],
-  ],
-  [
-    [744, 155],
-    [776, 174.5],
-    [808, 194],
-    [793.5, 219.5],
-    [779, 245],
-    [746.5, 230.5],
-    [718, 210],
-    [731, 182.5],
-  ],
-  [
-    [706, 224],
-    [739.5, 238.5],
-    [779, 252],
-    [766.5, 287],
-    [745, 316],
-    [713.5, 301],
-    [679, 286],
-    [692.5, 252.5],
-  ],
-  [
-    [664, 301],
-    [699.5, 311.5],
-    [735, 322],
-    [727.5, 353.5],
-    [717, 388],
-    [680, 378],
-    [647, 370],
-    [656, 334],
-  ],
-  [
-    [640, 390],
-    [675.5, 394.5],
-    [711, 399],
-    [708, 433.5],
-    [705, 468],
-    [668.5, 464],
-    [632, 460],
-    [636, 425],
-  ],
-  [
-    [627, 492],
-    [663.5, 486],
-    [700, 480],
-    [706, 507.5],
-    [712, 535],
-    [676, 544],
-    [640, 557],
-    [633.5, 522.5],
-  ],
-  [
-    [627, 492],
-    [663.5, 486],
-  ],
-  [
-    [627, 492],
-    [663.5, 486],
-  ],
-];
-
-const empty = new Array(8);
-
-const testData3 = [
-  ,
-  ,
-  [
-    [706, 224],
-    [739.5, 238.5],
-    [779, 252],
-    [766.5, 287],
-    [745, 316],
-    [713.5, 301],
-    [679, 286],
-    [692.5, 252.5],
-  ],
-  ,
-  [
-    [640, 390],
-    [675.5, 394.5],
-    [711, 399],
-    [708, 433.5],
-    [705, 468],
-    [668.5, 464],
-    [632, 460],
-    [636, 425],
-  ],
-];
 
 const CustomImagePreview = ({ file, handler, scaler }) => {
   if (file) {
@@ -173,92 +65,12 @@ const UploadWithProgressPreview = () => {
   const [confirmation, setConfirmation] = useState(false);
 
   const emptyData = () => {
-    setData(empty);
+    setData(new Array(8));
   };
 
   React.useEffect(() => {
     reset();
   }, [file]);
-
-  const loadImg = (batch) => {
-    if (accession) {
-      setXray("new");
-
-      let images = batch.items;
-      images.forEach((image) => {
-        let file = image.file;
-        let fileName = file.name.split(".");
-        let fileID = uuid() + "." + fileName[fileName.length - 1];
-        let imageRef = ref(storageRef, fileID);
-        let uploadTask = uploadBytesResumable(imageRef, file);
-
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-            const progress =
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log("Upload is " + progress + "% done");
-            setPercent(progress);
-            switch (snapshot.state) {
-              case "paused":
-                console.log("Upload is paused");
-                break;
-              case "running":
-                console.log("Upload is running");
-                break;
-            }
-          },
-          (error) => {
-            // A full list of error codes is available at
-            // https://firebase.google.com/docs/storage/web/handle-errors
-            switch (error.code) {
-              case "storage/unauthorized":
-                // User doesn't have permission to access the object
-                break;
-              case "storage/canceled":
-                // User canceled the upload
-                break;
-
-              // ...
-
-              case "storage/unknown":
-                // Unknown error occurred, inspect error.serverResponse
-                break;
-            }
-          },
-          () => {
-            // Upload completed successfully, now we can get the download URL
-            setFilename(fileID);
-            setAddXray(true);
-            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-              console.log(fileID + " available at", downloadURL);
-              setUrl(downloadURL);
-            });
-          }
-        );
-
-        console.log(image.file.name);
-      });
-      console.log(
-        `batch ${batch.id} finished uploading with ${batch.items.length} items`
-      );
-      console.log("not uploading image with uploady");
-    } else {
-      alert(
-        "Add an accession or choose to add to an existing accession to begin uploading."
-      );
-    }
-  };
-
-  useBatchAddListener((batch) => {
-    if (unsavedChanges) {
-      setConfirmation(true);
-      setPendingBatch(batch);
-    } else {
-      loadImg(batch);
-    }
-  });
 
   const reset = () => {
     setItemNum(itemNum + 1);
@@ -277,7 +89,7 @@ const UploadWithProgressPreview = () => {
   };
 
   const placeholder = () => {
-    if (!accession) {
+    if (!file) {
       return <div>Choose</div>;
     }
   };
@@ -310,7 +122,7 @@ const UploadWithProgressPreview = () => {
               " (" +
               (xray ? xray : "UPLOAD AN IMAGE TO BEGIN MASKING") +
               ")"
-            : "02/01/22 Bug fix and delete feature patch"}
+            : "Draw a line segment to indicate the endplate."}
         </div>
         <div className="dropzone">
           <CustomImagePreview
@@ -318,14 +130,13 @@ const UploadWithProgressPreview = () => {
             handler={setCoords}
             scaler={setReal}
           />
-          {accession == null || xray == null ? (
+          {file == null ? (
             placeholder()
           ) : (
             <Overlay
-              xray={doc(db, "accessions/" + accession + "/X-rays", xray)}
+              file={file}
               key={itemNum}
               data={data}
-              points={new Array(maxPoints)}
               top={y0}
               left={x0}
               imgWidth={width}
@@ -339,7 +150,7 @@ const UploadWithProgressPreview = () => {
       </div>
       <Confirmation
         open={confirmation}
-        function={() => loadImg(pendingBatch)}
+        function={(newFile) => setFile(newFile)}
         question={"Unsaved changes."}
         explanation={
           "You have unsaved edits. Are you sure you wish to load a new x-ray without first saving your edits?"
@@ -352,12 +163,4 @@ const UploadWithProgressPreview = () => {
   );
 };
 
-const UploadImage = () => {
-  return (
-    <Uploady>
-      <UploadWithProgressPreview />
-    </Uploady>
-  );
-};
-
-export default UploadImage;
+export default UploadWithProgressPreview;

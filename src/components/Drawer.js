@@ -9,11 +9,15 @@ import { GrChapterAdd } from "react-icons/gr";
 import ListItemButton from "@mui/material/ListItemButton";
 import Confirmation from "./Confirmation";
 import sample1 from "../images/sample1.jpeg";
+import { FiCheckCircle, FiCircle } from "react-icons/fi";
 
 export default function Drawer(props) {
   const [state, setState] = React.useState(false);
   const [confirmation, setConfirmation] = React.useState(false);
   const files = [sample1, sample1, sample1];
+  const [complete, setComplete] = React.useState(
+    props.complete ? props.complete : new Array(files.length)
+  );
 
   const toggleDrawer = (open) => (event) => {
     if (
@@ -37,11 +41,14 @@ export default function Drawer(props) {
             onClick={
               props.unsaved
                 ? () => setConfirmation(true)
-                : () => props.file(file)
+                : () => {
+                    setState(false);
+                    props.file(file);
+                  }
             }
           >
             <ListItemIcon>
-              <GrChapterAdd />
+              {complete[index] ? <FiCheckCircle /> : <FiCircle />}
             </ListItemIcon>
             <ListItemText primary={"Sample " + (index + 1)} />
           </ListItemButton>

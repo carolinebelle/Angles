@@ -1,5 +1,4 @@
 import React from "react";
-import "./styles.css";
 
 //receives coordinates relative to size of image on screen (imgCoords)
 export default class Circle extends React.Component {

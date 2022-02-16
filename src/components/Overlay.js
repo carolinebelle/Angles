@@ -3,30 +3,26 @@ import "./styles.css";
 import { Line } from "react-lineto";
 import Point from "./Point";
 import Landmarks from "./Landmarks";
-import Circle from "./Circle";
 import CopyText from "./CopyText";
-import Switch from "react-switch";
 import Mask from "./Mask";
-import LevelButton from "./LevelButton";
 import { Stage, Layer } from "react-konva";
 import Confirmation from "./Confirmation";
+import ControlPanel from "./ControlPanel";
 
 import { updateDoc, deleteField } from "../Firebase";
 
 //TODO: selectively delete points and lines
 
-// Start at L5 then L4, L3, L2, L1, S1, Femoral head 1 and Femoral head 2
-const order = [0, 5, 4, 3, 2, 1, 6, 7];
+// Start at S1, then L5, then L4, L3, L2, L1, Femoral head 1 and Femoral head 2
+const order = [0, 5, 4, 3, 2, 1];
 
 export default class Overlay extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      landmarks: this.toNestedArray(this.props.data), //this.props.data is a nested array
+      landmarks: this.toNestedArray(this.props.data), //this.props.data is a flat array
       currentLevel: -1,
-
-      anteriorLeft: true,
 
       draw: false, //can the user draw another point, displays grey square under cursor
       active: false, //is the user actively drawing a line, displays red square
@@ -60,7 +56,6 @@ export default class Overlay extends React.Component {
     this.realToScreenCoords = this.realToScreenCoords.bind(this);
 
     this.onMouseMove = this.onMouseMove.bind(this);
-    this.anteriorSide = this.anteriorSide.bind(this);
     this.activeDraw = this.activeDraw.bind(this);
     this.renderLines = this.renderLines.bind(this);
 
@@ -73,10 +68,6 @@ export default class Overlay extends React.Component {
     this.toggleLevel = this.toggleLevel.bind(this);
     this.canDraw = this.canDraw.bind(this);
 
-    //femoral heads
-    this.activeCircle = this.activeCircle.bind(this);
-
-    this.isEditing = this.isEditing.bind(this);
     this.fromNestedArray = this.fromNestedArray.bind(this);
     this.toNestedArray = this.toNestedArray.bind(this);
     this.copyLandmarks = this.copyLandmarks.bind(this);
@@ -86,17 +77,12 @@ export default class Overlay extends React.Component {
     this.confirmedDelete = this.confirmedDelete.bind(this);
     this.save = this.save.bind(this);
 
-    this.unscramble = this.unscramble.bind(this);
+    this.draw = this.draw.bind(this);
   }
 
-  maxPoints = 8;
+  maxPoints = 4;
 
   updateCount = 0;
-
-  /* Image formating **********************************************/
-  anteriorSide(checked) {
-    this.setState({ anteriorLeft: checked });
-  }
 
   /* Level control **********************************************/
 
@@ -205,11 +191,7 @@ export default class Overlay extends React.Component {
       if (this.state.landmarks[i]) {
         newLandmarks[i] = [...this.state.landmarks[i]];
       } else {
-        if (i == 6 || i == 7) {
-          newLandmarks[i] = new Array(4); //only need 2 points for femoral heads
-        } else {
-          newLandmarks[i] = new Array(this.maxPoints * 2);
-        }
+        newLandmarks[i] = new Array(this.maxPoints * 2);
       }
     }
 
@@ -224,35 +206,23 @@ export default class Overlay extends React.Component {
     let currentPoints = points ? points : this.state.startPoints;
 
     if (currentLevel != -1) {
-      if (currentLevel == 6 || currentLevel == 7) {
-        //femoral heads
-        if (!currentPoints[0]) {
-          //no first point yet
-          this.setState({ draw: true, active: false });
-        } else if (!currentPoints[2]) {
-          this.setState({ draw: true, active: true });
-        } else {
-          this.setState({ draw: false, active: false });
-        }
-      } else {
-        let empty = -1;
-        const pOrder = [0, 2, 6, 4];
-        pOrder.forEach((num) => {
-          if (!currentPoints[num * 2]) {
-            //does not exist
-            if (empty == -1) {
-              empty = num;
-            }
+      let empty = -1;
+      const pOrder = [0, 1, 3, 2];
+      pOrder.forEach((num) => {
+        if (!currentPoints[num * 2]) {
+          //does not exist
+          if (empty == -1) {
+            empty = num;
           }
-        });
-
-        if (empty == 0 || empty == 6) {
-          this.setState({ draw: true, active: false });
-        } else if (empty == 2 || empty == 4) {
-          this.setState({ draw: true, active: true });
-        } else {
-          this.setState({ draw: false, active: false });
         }
+      });
+
+      if (empty == 0 || empty == 3) {
+        this.setState({ draw: true, active: false });
+      } else if (empty == 1 || empty == 2) {
+        this.setState({ draw: true, active: true });
+      } else {
+        this.setState({ draw: false, active: false });
       }
     } else {
       this.setState({ draw: false, active: false });
@@ -270,69 +240,44 @@ export default class Overlay extends React.Component {
     }
   }
 
-  // dynamically draws circle based on mouse position and first point of femoral head
-  activeCircle = () => {
-    let coords;
-    let x0;
-    let y0;
-    if (!this.state.points[2] && this.state.points[0]) {
-      coords = this.realToImgCoords(this.state.points[0], this.state.points[1]);
-      x0 = coords.imgX;
-      y0 = coords.imgY;
-    }
-    return (
-      <Circle
-        key={this.state.mouseX + "," + this.state.mouseY}
-        x0={x0}
-        y0={y0}
-        x1={this.state.mouseX}
-        y1={this.state.mouseY}
-      />
-    );
-  };
-
   activeLine = () => {
     if (this.state.active && this.state.mouseX && this.state.mouseY) {
-      if (this.state.currentLevel == 6 || this.state.currentLevel == 7) {
-        return this.activeCircle();
-      } else {
-        let coords;
-        let x0;
-        let y0;
-        let x1;
-        let y1;
-        if (!this.state.points[4] && this.state.points[0]) {
-          coords = this.realToScreenCoords(
-            this.state.points[0],
-            this.state.points[1]
-          );
-          x0 = coords.x;
-          y0 = coords.y;
-          coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
-          x1 = coords.x;
-          y1 = coords.y;
-        } else if (!this.state.points[8] && this.state.points[12]) {
-          coords = this.realToScreenCoords(
-            this.state.points[12],
-            this.state.points[13]
-          );
-          x0 = coords.x;
-          y0 = coords.y;
-          coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
-          x1 = coords.x;
-          y1 = coords.y;
-        }
-        return (
-          <Line
-            x0={x0}
-            y0={y0}
-            x1={x1}
-            y1={y1}
-            className="line"
-            borderWidth={this.lineBorderWidth}
-          />
+      let coords;
+      let x0;
+      let y0;
+      let x1;
+      let y1;
+      if (!this.state.points[2] && this.state.points[0]) {
+        coords = this.realToScreenCoords(
+          this.state.points[0],
+          this.state.points[1]
         );
+        x0 = coords.x;
+        y0 = coords.y;
+        coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
+        x1 = coords.x;
+        y1 = coords.y;
+      } else if (!this.state.points[4] && this.state.points[6]) {
+        coords = this.realToScreenCoords(
+          this.state.points[6],
+          this.state.points[7]
+        );
+        x0 = coords.x;
+        y0 = coords.y;
+        coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
+        x1 = coords.x;
+        y1 = coords.y;
       }
+      return (
+        <Line
+          x0={x0}
+          y0={y0}
+          x1={x1}
+          y1={y1}
+          className="line"
+          borderWidth={this.lineBorderWidth}
+        />
+      );
     }
   };
 
@@ -419,48 +364,6 @@ export default class Overlay extends React.Component {
       }
     });
 
-    if (iPoints[0] && iPoints[4] && iPoints[12] && iPoints[8] && !iPoints[6]) {
-      let { points, startPoints } = this.unscramble(updatedPoints, iPoints);
-
-      let addPoints = [];
-      //add vertical midpoints
-      if (!startPoints[6]) {
-        //midpoint not already added
-        let mx = (points[4] + points[8]) / 2;
-        let my = (points[5] + points[9]) / 2;
-        addPoints.push([true, 6, mx, my]);
-      }
-      if (!startPoints[14]) {
-        //midpoint not already added
-        let mx = (points[0] + points[12]) / 2;
-        let my = (points[1] + points[13]) / 2;
-        addPoints.push([true, 14, mx, my]);
-      }
-
-      addPoints.forEach((element) => {
-        //[initial, index, x, y]
-        let initial = element[0];
-        let index = element[1];
-        let x = element[2];
-        let y = element[3];
-
-        if (initial) {
-          //add to startPoints and points
-          startPoints[index] = x;
-          startPoints[index + 1] = y;
-          points[index] = x;
-          points[index + 1] = y;
-        } else {
-          // only add to points
-          points[index] = x;
-          points[index + 1] = y;
-        }
-      });
-
-      iPoints = [...startPoints];
-      updatedPoints = [...points];
-    }
-
     this.setState({ startPoints: iPoints, points: updatedPoints }); //possible
   }
 
@@ -479,45 +382,25 @@ export default class Overlay extends React.Component {
   //converts realCoords to imgCoords
   renderPoints = () => {
     if (this.state.startPoints) {
-      if (this.state.currentLevel == 6 || this.state.currentLevel == 6) {
-        return [0, 2].map((val) => {
-          if (this.state.startPoints[val] && this.state.startPoints[val + 1]) {
-            let { imgX, imgY } = this.realToImgCoords(
-              this.state.startPoints[val],
-              this.state.startPoints[val + 1]
-            );
-            return (
-              <Point
-                key={val + ": " + imgX + "," + imgY}
-                x={imgX}
-                y={imgY}
-                updatePos={this.updatePosition}
-                index={val}
-              />
-            );
-          }
-        });
-      } else {
-        return [0, 2, 4, 6, 8, 10, 12, 14].map((val) => {
-          if (this.state.startPoints[val] && this.state.startPoints[val + 1]) {
-            let { imgX, imgY } = this.realToImgCoords(
-              this.state.startPoints[val],
-              this.state.startPoints[val + 1]
-            );
-            // return this.state.startPoints.map((point, index) => {
-            //   let { imgX, imgY } = this.realToImgCoords(point[0], point[1]);
-            return (
-              <Point
-                key={val + ": " + imgX + "," + imgY}
-                x={imgX}
-                y={imgY}
-                updatePos={this.updatePosition}
-                index={val}
-              />
-            );
-          }
-        });
-      }
+      return [0, 2, 4, 6].map((val) => {
+        if (this.state.startPoints[val] && this.state.startPoints[val + 1]) {
+          let { imgX, imgY } = this.realToImgCoords(
+            this.state.startPoints[val],
+            this.state.startPoints[val + 1]
+          );
+          // return this.state.startPoints.map((point, index) => {
+          //   let { imgX, imgY } = this.realToImgCoords(point[0], point[1]);
+          return (
+            <Point
+              key={val + ": " + imgX + "," + imgY}
+              x={imgX}
+              y={imgY}
+              updatePos={this.updatePosition}
+              index={val}
+            />
+          );
+        }
+      });
     }
   };
 
@@ -535,117 +418,35 @@ export default class Overlay extends React.Component {
     this.toggleLevel(index);
   }
 
-  unscramble(currentPoints, iPoints) {
-    let points = [...currentPoints];
-    let lines = 0;
-
-    if (
-      currentPoints[0] &&
-      currentPoints[1] &&
-      currentPoints[4] &&
-      currentPoints[5]
-    ) {
-      lines += 1;
-      //one line exists
-      //make sure (points[0], points[1]) is farther left than (points[4], points[5])
-      if (currentPoints[0] > currentPoints[4]) {
-        points[4] = currentPoints[0];
-        points[0] = currentPoints[4];
-
-        points[5] = currentPoints[1];
-        points[1] = currentPoints[5];
-      }
-    }
-
-    if (points[12] && points[13] && points[8] && points[9]) {
-      lines += 1;
-      //one line exists
-      //make sure (points[12], points[13]) is farther left than (points[8], points[9])
-      if (points[12] > points[8]) {
-        points[8] = currentPoints[12];
-        points[12] = currentPoints[8];
-
-        points[9] = currentPoints[13];
-        points[13] = currentPoints[9];
-      }
-    }
-
-    if (lines == 2) {
-      let copy = [...points];
-      //make sure line (points[0], points[1]) to (points[4],points[5]) is superior to the other line
-      if (copy[1] > copy[13]) {
-        //greater value is more inferior on the xray
-        points[12] = copy[0];
-        points[0] = copy[12];
-
-        points[13] = copy[1];
-        points[1] = copy[13];
-
-        points[10] = copy[2];
-        points[2] = copy[10];
-
-        points[11] = copy[3];
-        points[3] = copy[11];
-
-        points[4] = copy[8];
-        points[8] = copy[4];
-
-        points[5] = copy[9];
-        points[9] = copy[5];
-      }
-    }
-
-    let startPoints = [...points];
-    return { points, startPoints };
-  }
-
   // passes real coords
   onClick(e) {
     let { realX, realY } = this.screenToRealCoords(e.clientX, e.clientY);
     let x = realX;
     let y = realY;
     if (this.state.draw) {
-      let femHead =
-        this.state.currentLevel == 6 || this.state.currentLevel == 7;
       if (this.state.active) {
         //second point of line
-        if (femHead) {
-          this.updatePosition(true, 2, x, y);
+        let index;
+        if (!this.state.startPoints[2]) index = 2;
+        else if (!this.state.startPoints[4]) index = 4;
+        else index = -1; //no empty slot
+
+        if (index == 2) {
+          //add midpoints
+          this.updatePosition(true, index, x, y);
+          this.setState({ active: false }); //no longer actively drawing a line segment
+        } else if (index == 4) {
+          this.updatePosition(true, index, x, y);
           this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
         } else {
-          let index;
-          if (!this.state.startPoints[4]) index = 4;
-          else if (!this.state.startPoints[8]) index = 8;
-          else index = -1; //no empty slot
-
-          if (index == 4) {
-            //add midpoints
-            let mx = (this.state.points[0] + x) / 2;
-            let my = (this.state.points[1] + y) / 2;
-            let midpoint = [true, 2, mx, my];
-            let endpoint = [true, 4, x, y];
-            this.updateManyPositions([midpoint, endpoint]);
-            this.setState({ active: false }); //no longer actively drawing a line segment
-          } else if (index == 8) {
-            let mx = (this.state.points[12] + x) / 2;
-            let my = (this.state.points[13] + y) / 2;
-            let midpoint = [true, 10, mx, my];
-            let endpoint = [true, 8, x, y];
-
-            let addPoints = [midpoint, endpoint];
-
-            this.updateManyPositions(addPoints);
-            this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
-          } else {
-            this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
-          }
+          this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
         }
       } else {
         //first point of line
         let index;
 
         if (!this.state.startPoints[0]) index = 0;
-        else if (!femHead && !this.state.startPoints[12]) index = 12;
+        else if (!this.state.startPoints[6]) index = 6;
         else index = -1; //no empty slot
 
         if (index != -1) {
@@ -658,72 +459,18 @@ export default class Overlay extends React.Component {
 
   renderLines = () => {
     if (this.state.points) {
-      const femHead =
-        this.state.currentLevel == 6 || this.state.currentLevel == 7;
       let coords;
       let x0;
       let y0;
       let x1;
       let y1;
-      if (femHead) {
-        if (this.state.points[0] && this.state.points[2]) {
-          coords = this.realToImgCoords(
-            this.state.points[0],
-            this.state.points[1]
-          );
-          x0 = coords.imgX;
-          y0 = coords.imgY;
-          coords = this.realToImgCoords(
-            this.state.points[2],
-            this.state.points[3]
-          );
-          x1 = coords.imgX;
-          y1 = coords.imgY;
-          return (
-            <Circle
-              key={x0 + ", " + y0 + " and " + x1 + ", " + y1}
-              x0={x0}
-              y0={y0}
-              x1={x1}
-              y1={y1}
-            />
-          );
-        }
-      } else {
-        let a = 0;
-        let b = 2;
-        let lines = [];
 
-        while (b < this.state.points.length) {
-          if (this.state.points[a] && this.state.points[b]) {
-            coords = this.realToScreenCoords(
-              this.state.points[a],
-              this.state.points[a + 1]
-            );
-            x0 = coords.x;
-            y0 = coords.y;
-            coords = this.realToScreenCoords(
-              this.state.points[b],
-              this.state.points[b + 1]
-            );
-            x1 = coords.x;
-            y1 = coords.y;
-            lines.push(
-              <Line
-                key={a}
-                x0={x0}
-                y0={y0}
-                x1={x1}
-                y1={y1}
-                className="line"
-                borderWidth={this.lineBorderWidth}
-              />
-            );
-          }
-          a += 2;
-          b += 2;
-        }
-        if (this.state.points[a] && this.state.points[0]) {
+      let a = 0;
+      let b = 2;
+      let lines = [];
+
+      while (b < this.state.points.length) {
+        if (this.state.points[a] && this.state.points[b]) {
           coords = this.realToScreenCoords(
             this.state.points[a],
             this.state.points[a + 1]
@@ -731,8 +478,8 @@ export default class Overlay extends React.Component {
           x0 = coords.x;
           y0 = coords.y;
           coords = this.realToScreenCoords(
-            this.state.points[0],
-            this.state.points[1]
+            this.state.points[b],
+            this.state.points[b + 1]
           );
           x1 = coords.x;
           y1 = coords.y;
@@ -748,9 +495,11 @@ export default class Overlay extends React.Component {
             />
           );
         }
-
-        return <div>{lines}</div>;
+        a += 4;
+        b += 4;
       }
+
+      return <div>{lines}</div>;
     }
   };
 
@@ -950,92 +699,17 @@ export default class Overlay extends React.Component {
     this.props.edits(false);
   }
 
-  isEditing() {
-    if (this.state.editing) {
-      return (
-        <div className="rightPanel">
-          <LevelButton
-            index={100}
-            level={"SAVE"}
-            active={this.state.editing}
-            toggleLevel={this.save}
-            controller={true}
-            delete={this.completeDelete}
-          />
-          <LevelButton
-            index={1}
-            level={"L1"}
-            active={1 == this.state.currentLevel ? true : false}
-            toggleLevel={this.toggleLevel}
-            delete={this.levelDelete}
-          />
-          <LevelButton
-            index={2}
-            level={"L2"}
-            active={2 == this.state.currentLevel ? true : false}
-            toggleLevel={this.toggleLevel}
-            delete={this.levelDelete}
-          />
-          <LevelButton
-            index={3}
-            level={"L3"}
-            active={3 == this.state.currentLevel ? true : false}
-            toggleLevel={this.toggleLevel}
-            delete={this.levelDelete}
-          />
-          <LevelButton
-            index={4}
-            level={"L4"}
-            active={4 == this.state.currentLevel ? true : false}
-            toggleLevel={this.toggleLevel}
-            delete={this.levelDelete}
-          />
-          <LevelButton
-            index={5}
-            level={"L5"}
-            active={5 == this.state.currentLevel ? true : false}
-            toggleLevel={this.toggleLevel}
-            delete={this.levelDelete}
-          />
-          <LevelButton
-            index={0}
-            level={"S1"}
-            active={0 == this.state.currentLevel ? true : false}
-            toggleLevel={this.toggleLevel}
-            delete={this.levelDelete}
-          />
-          <LevelButton
-            index={6}
-            level={"F1"}
-            active={6 == this.state.currentLevel ? true : false}
-            toggleLevel={this.toggleLevel}
-            delete={this.levelDelete}
-          />
-          <LevelButton
-            index={7}
-            level={"F2"}
-            active={7 == this.state.currentLevel ? true : false}
-            toggleLevel={this.toggleLevel}
-            delete={this.levelDelete}
-          />
-        </div>
-      );
-    } else {
-      return (
-        <div className="rightPanel">
-          <LevelButton
-            index={101}
-            level={"EDIT"}
-            active={false}
-            toggleLevel={() => {
-              this.setState({ editing: true });
-              this.props.edits(true);
-            }}
-            controller={true}
-          />
-        </div>
-      );
-    }
+  draw() {
+    return (
+      <>
+        {this.renderPoints()}
+        {this.activeDraw()}
+        {this.activeLine()}
+        {this.renderLines()}
+        {this.renderLandmarks()}
+        {this.renderMasks()}
+      </>
+    );
   }
 
   render() {
@@ -1053,23 +727,20 @@ export default class Overlay extends React.Component {
             height: this.props.imgHeight,
           }}
         >
-          {this.renderPoints()}
-          {this.activeDraw()}
-          {this.activeLine()}
-          {this.renderLines()}
-          {this.renderLandmarks()}
-          {this.renderMasks()}
+          {this.draw()}
         </div>
-        <div id="copytext">{this.getAngles()}</div>
-        <div className="switch">
-          <Switch
-            onChange={this.anteriorSide}
-            checked={this.state.anteriorLeft}
-            onColor="#809be6"
-            offColor="#000000"
-          />
-        </div>
-        {this.isEditing()}
+        <ControlPanel
+          open={this.state.editing}
+          save={this.save}
+          completeDelete={this.completeDelete}
+          toggleLevel={this.toggleLevel}
+          levelDelete={this.levelDelete}
+          currentLevel={this.state.currentLevel}
+          edits={() => {
+            this.setState({ editing: true });
+            this.props.edits(true);
+          }}
+        />
         <Confirmation
           open={this.state.needConfirmation}
           function={this.state.functionToConfirm}
