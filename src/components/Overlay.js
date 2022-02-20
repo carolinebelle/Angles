@@ -99,10 +99,9 @@ export default class Overlay extends React.Component {
 
   levelDelete(index) {
     if (this.state.currentLevel == index) {
-      const femHeads = index == 6 || index == 7;
       this.setState({
-        points: femHeads ? new Array(4) : new Array(this.maxPoints * 2),
-        startPoints: femHeads ? new Array(4) : new Array(this.maxPoints * 2),
+        points: new Array(this.maxPoints * 2),
+        startPoints: new Array(this.maxPoints * 2),
         draw: true,
         active: false,
       });
@@ -152,14 +151,8 @@ export default class Overlay extends React.Component {
           toLoad = [...this.state.landmarks[level]];
           newCurrent = [...this.state.landmarks[level]];
         } else {
-          toLoad =
-            level == 6 || level == 7
-              ? new Array(4)
-              : new Array(this.maxPoints * 2);
-          newCurrent =
-            level == 6 || level == 7
-              ? new Array(4)
-              : new Array(this.maxPoints * 2);
+          toLoad = new Array(this.maxPoints * 2);
+          newCurrent = new Array(this.maxPoints * 2);
         }
 
         //load new, save old
@@ -207,7 +200,7 @@ export default class Overlay extends React.Component {
 
     if (currentLevel != -1) {
       let empty = -1;
-      const pOrder = [0, 1, 3, 2];
+      const pOrder = currentLevel == 0 ? [0, 1] : [0, 1, 3, 2];
       pOrder.forEach((num) => {
         if (!currentPoints[num * 2]) {
           //does not exist
@@ -544,6 +537,28 @@ export default class Overlay extends React.Component {
     if (this.props.imgWidth != 0 && this.props.imgHeight != 0) {
       if (this.state.landmarks) {
         let vertebra = [];
+        if (this.state.points) {
+          let imgCoordPoints;
+          imgCoordPoints = new Array(this.state.points.length);
+          for (let j = 0; j < this.state.points.length; j += 2) {
+            if (this.state.points[j] & this.state.points[j + 1]) {
+              let { imgX, imgY } = this.realToImgCoords(
+                this.state.points[j],
+                this.state.points[j + 1]
+              );
+              imgCoordPoints[j] = imgX;
+              imgCoordPoints[j + 1] = imgY;
+            }
+          }
+          vertebra.push(
+            <Mask
+              key={new Date().getTime()}
+              points={imgCoordPoints}
+              active={true}
+            />
+          );
+        }
+
         let i = 0;
         while (i < this.state.landmarks.length) {
           if (i != this.state.currentLevel && this.state.landmarks[i]) {
@@ -566,38 +581,13 @@ export default class Overlay extends React.Component {
           i += 1;
         }
 
-        // translate points
-        let imgCoordPoints;
-        if (this.state.points) {
-          imgCoordPoints = new Array(this.state.points.length);
-          for (let j = 0; j < this.state.points.length; j += 2) {
-            if (this.state.points[j] & this.state.points[j + 1]) {
-              let { imgX, imgY } = this.realToImgCoords(
-                this.state.points[j],
-                this.state.points[j + 1]
-              );
-              imgCoordPoints[j] = imgX;
-              imgCoordPoints[j + 1] = imgY;
-            }
-          }
-        }
-
         return (
           <Stage
             id="stage"
             width={this.props.imgWidth}
             height={this.props.imgHeight}
           >
-            <Layer id="layer">
-              {this.state.points ? (
-                <Mask
-                  key={new Date().getTime()}
-                  points={imgCoordPoints}
-                  active={true}
-                />
-              ) : null}
-              {vertebra}
-            </Layer>
+            <Layer id="layer">{vertebra}</Layer>
           </Stage>
         );
       }
@@ -650,7 +640,7 @@ export default class Overlay extends React.Component {
   }
 
   toNestedArray(arr) {
-    const splits = [8, 8, 8, 8, 8, 8, 2, 2];
+    const splits = [4, 4, 4, 4, 4, 2];
     const total = splits.reduce((partialSum, a) => partialSum + a) * 2;
     const valid = total == arr.length;
     let nestedArray = new Array(splits.length);

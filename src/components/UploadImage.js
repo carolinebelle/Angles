@@ -57,7 +57,7 @@ const UploadWithProgressPreview = () => {
   const [file, setFile] = useState(null);
   const [accession, setAccession] = useState(null);
   const [xray, setXray] = useState(null);
-  const [data, setData] = useState(empty);
+  const [data, setData] = useState(new Array(8));
 
   const [addAccession, setAddAccession] = useState(false);
   const [addXray, setAddXray] = useState(false);

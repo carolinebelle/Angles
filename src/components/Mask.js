@@ -1,11 +1,12 @@
 //TODO: polygon shaded in based on set of vertices (display only)
 import React, { Component } from "react";
-import { Shape, Group, Circle } from "react-konva";
+import { Shape, Group } from "react-konva";
 
 export default class Mask extends Component {
   constructor(props) {
     super(props);
     this.validPoints = this.validPoints.bind(this);
+    this.customShape = this.customShape.bind(this);
   }
 
   customShape = (context, shape) => {
@@ -22,6 +23,7 @@ export default class Mask extends Component {
   };
 
   validPoints() {
+    console.log("mask points: " + this.props.points);
     if (!this.props.points) {
       return;
     } else if (this.props.points.includes(null)) {
@@ -35,19 +37,7 @@ export default class Mask extends Component {
       } else {
         fill = "rgba(0, 0, 255, 0.15";
       }
-      return this.props.points.length == 4 ? (
-        <Circle
-          x={this.props.points[2]}
-          y={this.props.points[3]}
-          radius={Math.sqrt(
-            Math.pow(this.props.points[2] - this.props.points[0], 2) +
-              Math.pow(this.props.points[3] - this.props.points[1], 2)
-          )}
-          fill={fill}
-        />
-      ) : (
-        <Shape sceneFunc={this.customShape} fill={fill} />
-      );
+      return <Shape sceneFunc={this.customShape} fill={fill} />;
     }
   }
 
