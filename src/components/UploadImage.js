@@ -4,6 +4,7 @@ import Uploady, { useBatchAddListener } from "@rpldy/uploady";
 import UploadButton from "@rpldy/upload-button";
 import Overlay from "./Overlay.js";
 import { HiOutlineLogout, HiTrash } from "react-icons/hi";
+import { GrFormNextLink, GrFormPreviousLink } from "react-icons/gr";
 import { logout } from "../Firebase";
 import Drawer from "./Drawer";
 import Confirmation from "./Confirmation";
@@ -64,6 +65,10 @@ const UploadWithProgressPreview = () => {
   const [unsavedChanges, setunsavedChanges] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
 
+  const [sessionNum, setSessionNum] = useState(null);
+  const [previous, setPrevious] = useState(null);
+  const [next, setNext] = useState(null);
+
   const emptyData = () => {
     setData(new Array(8));
   };
@@ -90,7 +95,7 @@ const UploadWithProgressPreview = () => {
 
   const placeholder = () => {
     if (!file) {
-      return <div>Choose</div>;
+      return;
     }
   };
 
@@ -111,9 +116,9 @@ const UploadWithProgressPreview = () => {
           Research
           <HiOutlineLogout className="click_icon" onClick={logout} />
         </div>
-        {accession == null ? null : (
-          <UploadButton className="upload">Upload Files</UploadButton>
-        )}
+        <button className="upload">
+          {sessionNum ? "Save & Exit" : "Begin Session"}
+        </button>
       </div>
       <div className="Content">
         <div className="Announcements">
@@ -124,6 +129,16 @@ const UploadWithProgressPreview = () => {
               ")"
             : "Draw a line segment to indicate the endplate."}
         </div>
+        {previous ? (
+          <div className="button-previous">Previous</div>
+        ) : (
+          <div className="button-previous-disabled">Previous</div>
+        )}
+        {next ? (
+          <div className="button-next">Previous</div>
+        ) : (
+          <div className="button-next-disabled">Next</div>
+        )}
         <div className="dropzone">
           <CustomImagePreview
             file={file}
