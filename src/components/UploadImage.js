@@ -1,16 +1,34 @@
 import React, { useState, useRef } from "react";
 import "./styles.css";
-import Uploady, { useBatchAddListener } from "@rpldy/uploady";
-import UploadButton from "@rpldy/upload-button";
 import Overlay from "./Overlay.js";
-import { HiOutlineLogout, HiTrash } from "react-icons/hi";
-import { GrFormNextLink, GrFormPreviousLink } from "react-icons/gr";
-import { logout, doc, getDoc, db } from "../Firebase";
+import { HiOutlineLogout } from "react-icons/hi";
+import {
+  logout,
+  doc,
+  getDoc,
+  db,
+  where,
+  collection,
+  query,
+  getDocs,
+  addDoc,
+} from "../Firebase";
 import Drawer from "./Drawer";
 import Confirmation from "./Confirmation";
-import sample1 from "../images/sample1.jpeg";
+import sample0 from "../images/sample1.jpeg";
+import sample1 from "../images/sample2.jpeg";
+import sample2 from "../images/sample3.png";
+import { Timestamp } from "@firebase/firestore";
+import { createSlice } from "@reduxjs/toolkit";
 
-const images = [sample1, sample1, sample1];
+//current sessionNum
+const currentSession = 1; //number 1 session
+const images = [sample0, sample1, sample2];
+const docKeys = [
+  "sSqhk7NRwn5ZqKUwS9BQ",
+  "flhHBeFxP8lyvHPcZiPt",
+  "gKWMYvxTDzyP8F7yF8Th",
+];
 
 const CustomImagePreview = ({ file, handler, scaler }) => {
   if (file) {
@@ -56,6 +74,7 @@ const UploadWithProgressPreview = (props) => {
   const [realWidth, setRealWidth] = useState(0);
   const [realHeight, setRealHeight] = useState(0);
 
+  //index of current file
   const [fileIndex, setFileIndex] = useState(null);
   const [accession, setAccession] = useState(null);
   const [xray, setXray] = useState(null);
@@ -64,7 +83,8 @@ const UploadWithProgressPreview = (props) => {
   const [unsavedChanges, setunsavedChanges] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
 
-  const [sessionNum, setSessionNum] = useState(null);
+  const [session, setSession] = useState(null);
+  const [userSessions, setUserSessions] = useState(null);
   const [previous, setPrevious] = useState(null);
   const [next, setNext] = useState(null);
   const [userDoc, setUserDoc] = useState(null);
@@ -73,16 +93,55 @@ const UploadWithProgressPreview = (props) => {
     setData(new Array(8));
   };
 
-  React.useEffect(() => {
+  const loadFile = async (fileNum) => {
+    console.log("load file");
+    if (!session && userSessions) {
+      let q = query(userSessions, where("index", "==", currentSession));
+      let snapshots = await getDocs(q);
+      let retrievedSession = null;
+      snapshots.forEach((doc) => {
+        if (!retrievedSession) retrievedSession = doc;
+      });
+      if (retrievedSession) {
+        //resume old session
+        console.log("Session ID: " + retrievedSession.id);
+        setSession(retrievedSession);
+        alert("resuming old session");
+      } else if (userSessions) {
+        //create new session
+        const docRef = await addDoc(userSessions, {
+          start: Timestamp.now(),
+          index: currentSession,
+        });
+        let createdSession = await getDoc(docRef);
+        setSession(createdSession);
+        console.log("created session ID: " + createdSession.id);
+      }
+      setFileIndex(fileNum);
+    } else if (session) {
+      setFileIndex(fileNum);
+      return;
+    }
+  };
+
+  const firebaseUser = async () => {
+    console.log("hello");
     try {
-      const uDoc = async () => {
-        await getDoc(doc(db, "users", props.uid));
-      };
+      console.log("try");
+      const uRef = doc(db, "users", props.uid);
+      const uDoc = await getDoc(uRef);
       setUserDoc(uDoc);
+      setUserSessions(collection(db, "users/" + props.uid + "/sessions"));
     } catch (e) {
       console.error("Error retrieving user firebase doc: ", e);
     }
-  }, []);
+  };
+
+  React.useEffect(() => {
+    if (props.uid) {
+      firebaseUser();
+    }
+  }, [props.uid]);
 
   React.useEffect(() => {
     reset();
@@ -122,13 +181,38 @@ const UploadWithProgressPreview = (props) => {
     }
   };
 
+  const button = () => {
+    let text;
+    let click;
+    if (session) {
+      text = "Save & Exit";
+      click = () => {
+        alert("Save & exit not implemented.");
+        //reset session to null
+        //save data
+        //update end timestamp
+      };
+    } else {
+      text = "Begin Session";
+      click = () => {
+        console.log("begin session");
+        loadFile(0);
+      };
+    }
+    return (
+      <button className="upload" onClick={click}>
+        {text}
+      </button>
+    );
+  };
+
   return (
     <div className="App">
       <div className="Header">
         <div className="TitleBox">
           <Drawer
             images={images}
-            file={setFileIndex}
+            file={loadFile}
             accession={setAccession}
             xray={setXray}
             masks={setData}
@@ -139,9 +223,7 @@ const UploadWithProgressPreview = (props) => {
           Research
           <HiOutlineLogout className="click_icon" onClick={logout} />
         </div>
-        <button className="upload">
-          {sessionNum ? "Save & Exit" : "Begin Session"}
-        </button>
+        {button()}
       </div>
       <div className="Content">
         <div className="Announcements">

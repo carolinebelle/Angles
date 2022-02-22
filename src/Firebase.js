@@ -16,6 +16,9 @@ import {
   setDoc,
   updateDoc,
   deleteField,
+  getDoc,
+  where,
+  query,
 } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
@@ -76,6 +79,9 @@ export {
   Timestamp,
   doc,
   setDoc,
+  getDoc,
   updateDoc,
   deleteField,
+  where,
+  query,
 };
