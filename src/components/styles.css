@@ -147,7 +147,6 @@ button.upload:active {
 
 .Overlay.drag {
   position: absolute;
-  cursor: crosshair !important;
   user-select: none;
 }
 
@@ -230,8 +229,13 @@ button.upload:active {
   cursor: crosshair;
   user-select: none;
 }
-.point.drag {
-  cursor: none !important;
+.point-drag {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  z-index: 3;
+  border: 2px solid red;
+  cursor: none;
   user-select: none;
 }
 .pointInactive {

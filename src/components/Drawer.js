@@ -14,7 +14,7 @@ import { FiCheckCircle, FiCircle } from "react-icons/fi";
 export default function Drawer(props) {
   const [state, setState] = React.useState(false);
   const [confirmation, setConfirmation] = React.useState(false);
-  const files = [sample1, sample1, sample1];
+  const files = props.images;
   const [complete, setComplete] = React.useState(
     props.complete ? props.complete : new Array(files.length)
   );
@@ -33,8 +33,6 @@ export default function Drawer(props) {
 
   const samples = () => {
     return files.map((file, index) => {
-      console.log(file);
-      console.log(index);
       return (
         <ListItem key={index} disablePadding>
           <ListItemButton
@@ -42,8 +40,9 @@ export default function Drawer(props) {
               props.unsaved
                 ? () => setConfirmation(true)
                 : () => {
+                    console.log("set file index to: " + index);
                     setState(false);
-                    props.file(file);
+                    props.file(index);
                   }
             }
           >

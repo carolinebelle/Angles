@@ -23,7 +23,6 @@ export default class Mask extends Component {
   };
 
   validPoints() {
-    console.log("mask points: " + this.props.points);
     if (!this.props.points) {
       return;
     } else if (this.props.points.includes(null)) {

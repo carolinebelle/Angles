@@ -8,6 +8,7 @@ export default class Point extends React.Component {
     super(props);
 
     this.state = {
+      active: false,
       deltaPosition: {
         x: this.props.x,
         y: this.props.y,
@@ -38,13 +39,24 @@ export default class Point extends React.Component {
     );
   };
 
+  start = () => {
+    this.setState({ active: true });
+  };
+
+  stop = () => {
+    this.setState({ active: false });
+  };
+
   render() {
-    // const { deltaPosition } = this.state;
     return (
       <div>
-        <Draggable onDrag={this.handleDrag}>
+        <Draggable
+          onDrag={this.handleDrag}
+          onStart={this.start}
+          onStop={this.stop}
+        >
           <div
-            className="point"
+            className={this.state.active ? "point-drag" : "point"}
             style={{
               top: this.props.y - 7,
               left: this.props.x - 7,

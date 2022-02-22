@@ -8,6 +8,9 @@ import { GrFormNextLink, GrFormPreviousLink } from "react-icons/gr";
 import { logout } from "../Firebase";
 import Drawer from "./Drawer";
 import Confirmation from "./Confirmation";
+import sample1 from "../images/sample1.jpeg";
+
+const images = [sample1, sample1, sample1];
 
 const CustomImagePreview = ({ file, handler, scaler }) => {
   if (file) {
@@ -52,16 +55,12 @@ const UploadWithProgressPreview = () => {
   const [height, setHeight] = useState(0);
   const [realWidth, setRealWidth] = useState(0);
   const [realHeight, setRealHeight] = useState(0);
-  const [percent, setPercent] = useState(null);
 
-  const [filename, setFilename] = useState(null);
-  const [file, setFile] = useState(null);
+  const [fileIndex, setFileIndex] = useState(null);
   const [accession, setAccession] = useState(null);
   const [xray, setXray] = useState(null);
   const [data, setData] = useState(new Array(8));
 
-  const [addAccession, setAddAccession] = useState(false);
-  const [addXray, setAddXray] = useState(false);
   const [unsavedChanges, setunsavedChanges] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
 
@@ -75,7 +74,7 @@ const UploadWithProgressPreview = () => {
 
   React.useEffect(() => {
     reset();
-  }, [file]);
+  }, [fileIndex]);
 
   const reset = () => {
     setItemNum(itemNum + 1);
@@ -94,8 +93,20 @@ const UploadWithProgressPreview = () => {
   };
 
   const placeholder = () => {
-    if (!file) {
+    if (fileIndex == null) {
       return;
+    }
+  };
+
+  const previousImage = () => {
+    if (fileIndex !== null && fileIndex > 0) {
+      setFileIndex(fileIndex - 1);
+    }
+  };
+
+  const nextImage = () => {
+    if (fileIndex !== null && fileIndex < images.length - 1) {
+      setFileIndex(fileIndex + 1);
     }
   };
 
@@ -104,9 +115,9 @@ const UploadWithProgressPreview = () => {
       <div className="Header">
         <div className="TitleBox">
           <Drawer
-            file={setFile}
+            images={images}
+            file={setFileIndex}
             accession={setAccession}
-            add={setAddAccession}
             xray={setXray}
             masks={setData}
             emptyData={emptyData}
@@ -129,27 +140,31 @@ const UploadWithProgressPreview = () => {
               ")"
             : "Draw a line segment to indicate the endplate."}
         </div>
-        {previous ? (
-          <div className="button-previous">Previous</div>
+        {fileIndex !== null && fileIndex > 0 ? (
+          <div className="button-previous" onClick={previousImage}>
+            Previous
+          </div>
         ) : (
           <div className="button-previous-disabled">Previous</div>
         )}
-        {next ? (
-          <div className="button-next">Previous</div>
+        {fileIndex !== null && fileIndex < images.length - 1 ? (
+          <div className="button-next" onClick={nextImage}>
+            Next
+          </div>
         ) : (
           <div className="button-next-disabled">Next</div>
         )}
         <div className="dropzone">
           <CustomImagePreview
-            file={file}
+            file={fileIndex !== null ? images[fileIndex] : null}
             handler={setCoords}
             scaler={setReal}
           />
-          {file == null ? (
+          {fileIndex == null ? (
             placeholder()
           ) : (
             <Overlay
-              file={file}
+              file={images[fileIndex]}
               key={itemNum}
               data={data}
               top={y0}

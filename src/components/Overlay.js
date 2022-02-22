@@ -285,6 +285,7 @@ export default class Overlay extends React.Component {
                 top: this.state.mouseY - 6.5,
                 left: this.state.mouseX - 7.5,
                 border: "2px solid red",
+                cursor: "none",
               }}
             />
           );
@@ -296,6 +297,7 @@ export default class Overlay extends React.Component {
                 top: this.state.mouseY - 6.5,
                 left: this.state.mouseX - 7.5,
                 border: "2px solid grey",
+                cursor: "none",
               }}
             />
           );

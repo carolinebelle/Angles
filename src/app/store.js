@@ -1,9 +1,12 @@
-import { HowToReg } from "@mui/icons-material";
 import { configureStore } from "@reduxjs/toolkit";
-import landmarksReducer from "../features/landmarks/landmarks-slice";
+import authReducer from "../features/auth/auth-slice";
+import { composeWithDevTools } from "redux-devtools-extension";
 
-export const store = configureStore({
-  reducer: {
-    landmarks: landmarksReducer,
+export const store = configureStore(
+  {
+    reducer: {
+      auth: authReducer,
+    },
   },
-});
+  composeWithDevTools()
+);
