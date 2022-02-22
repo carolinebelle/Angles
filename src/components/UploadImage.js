@@ -67,13 +67,21 @@ const UploadWithProgressPreview = (props) => {
   const [sessionNum, setSessionNum] = useState(null);
   const [previous, setPrevious] = useState(null);
   const [next, setNext] = useState(null);
+  const [userDoc, setUserDoc] = useState(null);
 
   const emptyData = () => {
     setData(new Array(8));
   };
 
   React.useEffect(() => {
-    const userDoc = await getDoc(doc(db, "users", props.uid));
+    try {
+      const uDoc = async () => {
+        await getDoc(doc(db, "users", props.uid));
+      };
+      setUserDoc(uDoc);
+    } catch (e) {
+      console.error("Error retrieving user firebase doc: ", e);
+    }
   }, []);
 
   React.useEffect(() => {
