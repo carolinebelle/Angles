@@ -699,7 +699,7 @@ export default class Overlay extends React.Component {
         {this.activeLine()}
         {this.renderLines()}
         {this.renderLandmarks()}
-        {this.renderMasks()}
+        {/* {this.renderMasks()} */}
       </>
     );
   }

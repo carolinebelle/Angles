@@ -1,21 +1,23 @@
 // DUCKS pattern
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = { value: null };
+const initialState = null;
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     login(state, action) {
-      state.value = action.payload;
+      state = action.payload;
     },
     logout(state) {
-      state.value = null;
+      state = null;
     },
   },
 });
 
-export const { login, logout } = authSlice.actions;
+const { actions, reducer } = authSlice;
 
-export default authSlice.reducer;
+export const { login, logout } = actions;
+
+export default reducer;

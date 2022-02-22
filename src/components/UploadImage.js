@@ -5,7 +5,7 @@ import UploadButton from "@rpldy/upload-button";
 import Overlay from "./Overlay.js";
 import { HiOutlineLogout, HiTrash } from "react-icons/hi";
 import { GrFormNextLink, GrFormPreviousLink } from "react-icons/gr";
-import { logout } from "../Firebase";
+import { logout, doc, getDoc, db } from "../Firebase";
 import Drawer from "./Drawer";
 import Confirmation from "./Confirmation";
 import sample1 from "../images/sample1.jpeg";
@@ -47,7 +47,7 @@ const CustomImagePreview = ({ file, handler, scaler }) => {
   }
 };
 
-const UploadWithProgressPreview = () => {
+const UploadWithProgressPreview = (props) => {
   const [itemNum, setItemNum] = useState(0);
   const [x0, setX0] = useState(0);
   const [y0, setY0] = useState(0);
@@ -71,6 +71,10 @@ const UploadWithProgressPreview = () => {
   const emptyData = () => {
     setData(new Array(8));
   };
+
+  React.useEffect(() => {
+    const userDoc = await getDoc(doc(db, "users", props.uid));
+  }, []);
 
   React.useEffect(() => {
     reset();
@@ -138,7 +142,7 @@ const UploadWithProgressPreview = () => {
               " (" +
               (xray ? xray : "UPLOAD AN IMAGE TO BEGIN MASKING") +
               ")"
-            : "Draw a line segment to indicate the endplate."}
+            : "Click to set an endpoint for a line segment, indicating the endplate."}
         </div>
         {fileIndex !== null && fileIndex > 0 ? (
           <div className="button-previous" onClick={previousImage}>
