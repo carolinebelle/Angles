@@ -18,7 +18,7 @@ body,
   justify-content: space-between;
   background-color: rgb(128, 155, 230);
   color: white;
-  flex-basis: 50px;
+  height: 50px;
   z-index: 10;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.7);
   user-select: none;
@@ -59,11 +59,11 @@ body,
 
 button.upload {
   margin: 5px;
-  flex-basis: 200px;
+  flex-basis: 250px;
   max-width: 33vw;
-  font-size: 22px;
+  font-size: auto;
   background-color: white;
-  border: 5px solid white;
+  border: 2px solid white;
   border-radius: 5px;
   color: rgba(128, 155, 230);
   text-transform: uppercase;
@@ -79,11 +79,11 @@ button.upload:active {
 
 button.upload-disabled {
   margin: 5px;
-  flex-basis: 200px;
+  flex-basis: 250px;
   max-width: 33vw;
-  font-size: 22px;
+  font-size: auto;
   background-color: white;
-  border: 5px solid white;
+  border: 2px solid white;
   border-radius: 5px;
   color: rgba(128, 155, 230);
   text-transform: uppercase;
