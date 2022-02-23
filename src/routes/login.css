@@ -25,6 +25,16 @@
   border: none;
   color: white;
   background-color: rgb(128, 155, 230);
+  cursor: pointer;
+}
+.login__btn:hover {
+  padding: 10px;
+  font-size: 18px;
+  margin-bottom: 10px;
+  border: none;
+  color: white;
+  background-color: rgba(128, 155, 230, 0.836);
+  cursor: pointer;
 }
 .login__text {
   display: flex;
