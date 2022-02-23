@@ -12,14 +12,15 @@ import {
   query,
   getDocs,
   addDoc,
+  updateDoc,
+  setDoc,
 } from "../Firebase";
-import Drawer from "./Drawer";
 import Confirmation from "./Confirmation";
 import sample0 from "../images/sample1.jpeg";
 import sample1 from "../images/sample2.jpeg";
 import sample2 from "../images/sample3.png";
 import { Timestamp } from "@firebase/firestore";
-import { createSlice } from "@reduxjs/toolkit";
+import { Data } from "../helpers";
 
 //current sessionNum
 const currentSession = 1; //number 1 session
@@ -78,56 +79,83 @@ const UploadWithProgressPreview = (props) => {
   const [fileIndex, setFileIndex] = useState(null);
   const [accession, setAccession] = useState(null);
   const [xray, setXray] = useState(null);
-  const [data, setData] = useState(new Array(8));
 
   const [unsavedChanges, setunsavedChanges] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
 
   const [session, setSession] = useState(null);
   const [userSessions, setUserSessions] = useState(null);
-  const [previous, setPrevious] = useState(null);
-  const [next, setNext] = useState(null);
   const [userDoc, setUserDoc] = useState(null);
+  const [dataDoc, setDataDoc] = useState(null);
 
-  const emptyData = () => {
-    setData(new Array(8));
+  const [savedData, setSavedData] = useState(null);
+
+  const loadSession = async () => {
+    let q = query(userSessions, where("index", "==", currentSession));
+    let snapshots = await getDocs(q);
+    let retrievedSession = snapshots.docs[0];
+    if (retrievedSession) {
+      //resume old session
+      console.log("Session ID: " + retrievedSession.id);
+      setSession(retrievedSession);
+      alert("resuming old session");
+      return retrievedSession.id;
+    } else if (userSessions) {
+      //create new session
+      const docRef = await addDoc(userSessions, {
+        start: Timestamp.now(),
+        index: currentSession,
+      });
+      let createdSession = await getDoc(docRef);
+      setSession(createdSession);
+      console.log("created session ID: " + createdSession.id);
+      return createdSession.id;
+    }
+  };
+
+  const retrieveData = async (fileNum, sessionID) => {
+    const docRef = doc(
+      db,
+      "images/" + docKeys[fileNum] + "/sessions",
+      sessionID
+    );
+    console.log("file number: " + fileNum);
+    setDataDoc(docRef);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      let retrievedData = docSnap.data().data;
+      console.log("Document data:", retrievedData);
+      if (!retrievedData) {
+        setSavedData(new Data());
+      } else {
+        setSavedData(new Data(retrievedData));
+      }
+    } else {
+      // doc.data() will be undefined in this case
+      console.log("No such document!");
+      let data = new Data();
+      setSavedData(data);
+      await setDoc(docRef, { user: props.uid, data: null });
+    }
   };
 
   const loadFile = async (fileNum) => {
+    let sessionID;
     console.log("load file");
     if (!session && userSessions) {
-      let q = query(userSessions, where("index", "==", currentSession));
-      let snapshots = await getDocs(q);
-      let retrievedSession = null;
-      snapshots.forEach((doc) => {
-        if (!retrievedSession) retrievedSession = doc;
-      });
-      if (retrievedSession) {
-        //resume old session
-        console.log("Session ID: " + retrievedSession.id);
-        setSession(retrievedSession);
-        alert("resuming old session");
-      } else if (userSessions) {
-        //create new session
-        const docRef = await addDoc(userSessions, {
-          start: Timestamp.now(),
-          index: currentSession,
-        });
-        let createdSession = await getDoc(docRef);
-        setSession(createdSession);
-        console.log("created session ID: " + createdSession.id);
-      }
+      sessionID = await loadSession();
+    } else {
+      sessionID = session.id;
+    }
+
+    if (sessionID) {
       setFileIndex(fileNum);
-    } else if (session) {
-      setFileIndex(fileNum);
-      return;
+      retrieveData(fileNum, sessionID);
     }
   };
 
   const firebaseUser = async () => {
-    console.log("hello");
     try {
-      console.log("try");
       const uRef = doc(db, "users", props.uid);
       const uDoc = await getDoc(uRef);
       setUserDoc(uDoc);
@@ -148,6 +176,7 @@ const UploadWithProgressPreview = (props) => {
   }, [fileIndex]);
 
   const reset = () => {
+    console.log("Reset");
     setItemNum(itemNum + 1);
   };
 
@@ -169,38 +198,82 @@ const UploadWithProgressPreview = (props) => {
     }
   };
 
+  const clearOverlay = () => {
+    setDataDoc(null);
+    setSavedData(null);
+    reset();
+  };
+
   const previousImage = () => {
-    if (fileIndex !== null && fileIndex > 0) {
-      setFileIndex(fileIndex - 1);
+    if (!unsavedChanges && fileIndex !== null && fileIndex > 0) {
+      clearOverlay();
+      loadFile(fileIndex - 1);
     }
   };
 
   const nextImage = () => {
-    if (fileIndex !== null && fileIndex < images.length - 1) {
-      setFileIndex(fileIndex + 1);
+    if (
+      !unsavedChanges &&
+      fileIndex !== null &&
+      fileIndex < images.length - 1
+    ) {
+      clearOverlay();
+      loadFile(fileIndex + 1);
     }
   };
 
   const button = () => {
     let text;
     let click;
+    let className;
     if (session) {
-      text = "Save & Exit";
-      click = () => {
-        alert("Save & exit not implemented.");
-        //reset session to null
-        //save data
-        //update end timestamp
-      };
+      if (unsavedChanges) {
+        className = "upload-disabled";
+        text = "Unsaved Changes";
+        click = async () => {
+          alert("You have unsaved changes.");
+        };
+      } else if (fileIndex !== images.length - 1) {
+        className = "upload";
+        text = "Exit Session";
+        click = async () => {
+          //reset session to null
+          setSession(null);
+          clearOverlay();
+          setFileIndex(null);
+          reset();
+          //update end timestamp
+          await updateDoc(session.ref, {
+            end: Timestamp.now(),
+          });
+          alert("Your progress has been saved.");
+        };
+      } else if (!unsavedChanges && fileIndex == images.length - 1) {
+        className = "upload";
+        text = "Finish Session";
+        click = async () => {
+          //reset session to null
+          setSession(null);
+          clearOverlay();
+          setFileIndex(null);
+          reset();
+          //update end timestamp
+          await updateDoc(session.ref, {
+            end: Timestamp.now(),
+          });
+          alert("Session complete. Thank you for participating.");
+        };
+      }
     } else {
       text = "Begin Session";
       click = () => {
         console.log("begin session");
         loadFile(0);
       };
+      className = "upload";
     }
     return (
-      <button className="upload" onClick={click}>
+      <button className={className} onClick={click}>
         {text}
       </button>
     );
@@ -210,16 +283,6 @@ const UploadWithProgressPreview = (props) => {
     <div className="App">
       <div className="Header">
         <div className="TitleBox">
-          <Drawer
-            images={images}
-            file={loadFile}
-            accession={setAccession}
-            xray={setXray}
-            masks={setData}
-            emptyData={emptyData}
-            request={(func) => confirm(func)}
-            unsaved={unsavedChanges}
-          />
           Research
           <HiOutlineLogout className="click_icon" onClick={logout} />
         </div>
@@ -234,14 +297,16 @@ const UploadWithProgressPreview = (props) => {
               ")"
             : "Click to set an endpoint for a line segment, indicating the endplate."}
         </div>
-        {fileIndex !== null && fileIndex > 0 ? (
+        {fileIndex !== null && !unsavedChanges && fileIndex > 0 ? (
           <div className="button-previous" onClick={previousImage}>
             Previous
           </div>
         ) : (
           <div className="button-previous-disabled">Previous</div>
         )}
-        {fileIndex !== null && fileIndex < images.length - 1 ? (
+        {fileIndex !== null &&
+        !unsavedChanges &&
+        fileIndex < images.length - 1 ? (
           <div className="button-next" onClick={nextImage}>
             Next
           </div>
@@ -254,13 +319,13 @@ const UploadWithProgressPreview = (props) => {
             handler={setCoords}
             scaler={setReal}
           />
-          {fileIndex == null ? (
+          {savedData == null ? (
             placeholder()
           ) : (
             <Overlay
-              file={images[fileIndex]}
+              doc={dataDoc}
               key={itemNum}
-              data={data}
+              data={savedData}
               top={y0}
               left={x0}
               imgWidth={width}

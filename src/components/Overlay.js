@@ -9,7 +9,8 @@ import { Stage, Layer } from "react-konva";
 import Confirmation from "./Confirmation";
 import ControlPanel from "./ControlPanel";
 
-import { updateDoc, deleteField } from "../Firebase";
+import { updateDoc, deleteField, setDoc } from "../Firebase";
+import { Data } from "../helpers";
 
 //TODO: selectively delete points and lines
 
@@ -21,7 +22,6 @@ export default class Overlay extends React.Component {
     super(props);
 
     this.state = {
-      landmarks: this.toNestedArray(this.props.data), //this.props.data is a flat array
       currentLevel: -1,
 
       draw: false, //can the user draw another point, displays grey square under cursor
@@ -40,10 +40,8 @@ export default class Overlay extends React.Component {
       explantaion: "Would you like to confirm [action]",
       confirm: "Confirm",
       cancel: "Cancel",
-
-      pointRefresh: 0,
     };
-
+    this.data = new Data(this.props.data.array);
     this.lineBorderWidth = 2;
 
     this.onClick = this.onClick.bind(this);
@@ -70,7 +68,6 @@ export default class Overlay extends React.Component {
 
     this.fromNestedArray = this.fromNestedArray.bind(this);
     this.toNestedArray = this.toNestedArray.bind(this);
-    this.copyLandmarks = this.copyLandmarks.bind(this);
 
     this.completeDelete = this.completeDelete.bind(this);
     this.levelDelete = this.levelDelete.bind(this);
@@ -78,6 +75,10 @@ export default class Overlay extends React.Component {
     this.save = this.save.bind(this);
 
     this.draw = this.draw.bind(this);
+  }
+
+  componentWillUnmount() {
+    this.save();
   }
 
   maxPoints = 4;
@@ -110,8 +111,9 @@ export default class Overlay extends React.Component {
 
   confirmedDelete() {
     this.toggleLevel(-1);
+    this.save(true);
+    this.data = new Data();
     this.setState({
-      landmarks: new Array(this.state.landmarks.length),
       points: new Array(this.maxPoints * 2),
       startPoints: new Array(this.maxPoints * 2),
     });
@@ -120,17 +122,8 @@ export default class Overlay extends React.Component {
   toggleLevel(level) {
     console.log("toggle: " + level);
     if (!this.state.active) {
-      if (this.state.currentLevel == -1 && level != -1) {
-        this.setState({ editing: true });
-        this.props.edits(true);
-      } else if (level == -1) {
-        this.setState({ editing: false });
-      }
-
-      let newLandmarks = this.copyLandmarks();
-
       if (this.state.currentLevel != -1) {
-        newLandmarks[this.state.currentLevel] = [...this.state.points];
+        this.data.setVert(this.state.currentLevel, [...this.state.points]);
       }
 
       let toLoad;
@@ -141,15 +134,15 @@ export default class Overlay extends React.Component {
         //do not load new, do save old
         //set current level to -1
         this.setState({
-          landmarks: newLandmarks,
           points: null,
           startPoints: null,
           currentLevel: -1,
         });
+        this.save();
       } else {
-        if (this.state.landmarks[level]) {
-          toLoad = [...this.state.landmarks[level]];
-          newCurrent = [...this.state.landmarks[level]];
+        if (this.data.getVert(level)) {
+          toLoad = this.data.getVertArray(level);
+          newCurrent = this.data.getVertArray(level);
         } else {
           toLoad = new Array(this.maxPoints * 2);
           newCurrent = new Array(this.maxPoints * 2);
@@ -157,7 +150,6 @@ export default class Overlay extends React.Component {
 
         //load new, save old
         this.setState({
-          landmarks: newLandmarks,
           points: newCurrent,
           startPoints: toLoad,
           currentLevel: level,
@@ -169,26 +161,17 @@ export default class Overlay extends React.Component {
       } else {
         this.canDraw(level, toLoad);
       }
+
+      if (this.state.currentLevel == -1 && level != -1) {
+        this.setState({ editing: true });
+      } else if (level == -1) {
+        this.setState({ editing: false });
+      }
     } else {
       alert(
         "You are actively drawing. Do not attempt to switch masks while actively drawing."
       );
     }
-  }
-
-  copyLandmarks() {
-    let newLandmarks = new Array(this.state.landmarks.length);
-
-    //copy landmarks
-    for (let i = 0; i < newLandmarks.length; i++) {
-      if (this.state.landmarks[i]) {
-        newLandmarks[i] = [...this.state.landmarks[i]];
-      } else {
-        newLandmarks[i] = new Array(this.maxPoints * 2);
-      }
-    }
-
-    return newLandmarks;
   }
 
   /* Editing current level **********************************/
@@ -308,6 +291,7 @@ export default class Overlay extends React.Component {
 
   // //call setState to re-render component after updating coordinate of one point
   updatePosition(initial, index, xCoord, yCoord, imgCoords = false) {
+    this.props.edits(true);
     let x = xCoord;
     let y = yCoord;
     if (imgCoords) {
@@ -335,6 +319,7 @@ export default class Overlay extends React.Component {
   }
 
   updateManyPositions(updates) {
+    this.props.edits(true);
     //deep copy of points and startPoints
     let iPoints = [...this.state.startPoints];
     let updatedPoints = [...this.state.points];
@@ -419,6 +404,7 @@ export default class Overlay extends React.Component {
     let x = realX;
     let y = realY;
     if (this.state.draw) {
+      this.props.edits(true);
       if (this.state.active) {
         //second point of line
         let index;
@@ -499,18 +485,19 @@ export default class Overlay extends React.Component {
   };
 
   renderLandmarks = () => {
-    if (this.state.landmarks) {
+    if (this.data) {
       let vertebra = [];
       let i = 0;
-      while (i < this.state.landmarks.length) {
-        if (i != this.state.currentLevel && this.state.landmarks[i]) {
-          let points = new Array(this.state.landmarks[i].length);
+      while (i < this.data.length) {
+        if (i != this.state.currentLevel && this.data.getVert(i)) {
+          let vertArray = this.data.getVertArray(i);
+          let points = new Array(vertArray.length);
           let countEl = 0;
-          for (let j = 0; j < this.state.landmarks[i].length; j += 2) {
-            if (this.state.landmarks[i][j] && this.state.landmarks[i][j + 1]) {
+          for (let j = 0; j < points.length; j += 2) {
+            if (vertArray[j] && vertArray[j + 1]) {
               let { imgX, imgY } = this.realToImgCoords(
-                this.state.landmarks[i][j],
-                this.state.landmarks[i][j + 1]
+                vertArray[j],
+                vertArray[j + 1]
               );
               countEl += 1;
               points[j] = imgX;
@@ -537,7 +524,7 @@ export default class Overlay extends React.Component {
 
   renderMasks = () => {
     if (this.props.imgWidth != 0 && this.props.imgHeight != 0) {
-      if (this.state.landmarks) {
+      if (this.data) {
         let vertebra = [];
         if (this.state.points) {
           let imgCoordPoints;
@@ -562,17 +549,15 @@ export default class Overlay extends React.Component {
         }
 
         let i = 0;
-        while (i < this.state.landmarks.length) {
-          if (i != this.state.currentLevel && this.state.landmarks[i]) {
-            let points = new Array(this.state.landmarks[i].length);
-            for (let j = 0; j < this.state.landmarks[i].length; j += 2) {
-              if (
-                this.state.landmarks[i][j] &&
-                this.state.landmarks[i][j + 1]
-              ) {
+        while (i < this.data.length) {
+          if (i != this.state.currentLevel && this.data.getVert(i)) {
+            let vertArray = this.data.getVertArray(i);
+            let points = new Array(vertArray.length);
+            for (let j = 0; j < vertArray.length; j += 2) {
+              if (vertArray[j] && vertArray[j + 1]) {
                 let { imgX, imgY } = this.realToImgCoords(
-                  this.state.landmarks[i][j],
-                  this.state.landmarks[i][j + 1]
+                  vertArray[j],
+                  vertArray[j + 1]
                 );
                 points[j] = imgX;
                 points[j + 1] = imgY;
@@ -662,33 +647,28 @@ export default class Overlay extends React.Component {
     return nestedArray;
   }
 
-  async save() {
-    let landmarks = this.copyLandmarks();
-    if (this.state.currentLevel != -1)
-      landmarks[this.state.currentLevel] = [...this.state.points];
-
-    try {
-      await updateDoc(this.props.xray, {
-        masks: deleteField(),
-      });
-    } catch (e) {
-      console.error("Error deleting masks field for document: ", e);
+  async save(clear) {
+    let save;
+    if (clear) {
+      save = new Data().array;
+    } else {
+      save = this.data.array;
     }
-
-    let save = this.fromNestedArray(landmarks);
     console.log("to save: " + save);
     if (save) {
       try {
-        await updateDoc(this.props.xray, {
-          masks: save,
-        });
+        await setDoc(
+          this.props.doc,
+          {
+            data: save,
+          },
+          { merge: true }
+        );
+        this.props.edits(false);
       } catch (e) {
-        console.error("Error updating masks for document: ", e);
+        console.error("Error updating data for document: ", e);
       }
     }
-
-    this.toggleLevel(-1);
-    this.props.edits(false);
   }
 
   draw() {
@@ -723,14 +703,16 @@ export default class Overlay extends React.Component {
         </div>
         <ControlPanel
           open={this.state.editing}
-          save={this.save}
+          save={() => {
+            this.toggleLevel(-1);
+            this.save();
+          }}
           completeDelete={this.completeDelete}
           toggleLevel={this.toggleLevel}
           levelDelete={this.levelDelete}
           currentLevel={this.state.currentLevel}
           edits={() => {
             this.setState({ editing: true });
-            this.props.edits(true);
           }}
         />
         <Confirmation

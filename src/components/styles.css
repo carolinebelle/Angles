@@ -77,6 +77,27 @@ button.upload:active {
   background-color: rgba(40, 48, 71, 0.226);
 }
 
+button.upload-disabled {
+  margin: 5px;
+  flex-basis: 200px;
+  max-width: 33vw;
+  font-size: 22px;
+  background-color: white;
+  border: 5px solid white;
+  border-radius: 5px;
+  color: rgba(128, 155, 230);
+  text-transform: uppercase;
+  font-weight: bolder;
+  cursor: pointer;
+  opacity: 0.2;
+}
+button.upload-disabled:hover {
+  border: 2px solid rgba(128, 155, 230, 0.541);
+}
+button.upload-disabled:active {
+  background-color: rgba(40, 48, 71, 0.226);
+}
+
 .accession {
   color: black;
   display: flex;
