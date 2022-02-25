@@ -8,7 +8,6 @@ import {
   getDoc,
   db,
   where,
-  collection,
   query,
   getDocs,
   addDoc,
@@ -77,21 +76,21 @@ const UploadWithProgressPreview = (props) => {
 
   //index of current file
   const [fileIndex, setFileIndex] = useState(null);
-  const [accession, setAccession] = useState(null);
-  const [xray, setXray] = useState(null);
 
   const [unsavedChanges, setunsavedChanges] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
 
   const [session, setSession] = useState(null);
-  const [userSessions, setUserSessions] = useState(null);
-  const [userDoc, setUserDoc] = useState(null);
+  // const [userDoc, setUserDoc] = useState(null);
   const [dataDoc, setDataDoc] = useState(null);
 
   const [savedData, setSavedData] = useState(null);
 
+  const [text, setText] = useState(props.instructions.greeting());
+  props.instructions.displayText(setText); //enable Instructions object to display text
+
   const loadSession = async () => {
-    let q = query(userSessions, where("index", "==", currentSession));
+    let q = query(props.sessions, where("index", "==", currentSession));
     let snapshots = await getDocs(q);
     let retrievedSession = snapshots.docs[0];
     if (retrievedSession) {
@@ -100,9 +99,9 @@ const UploadWithProgressPreview = (props) => {
       setSession(retrievedSession);
       alert("resuming old session");
       return retrievedSession.id;
-    } else if (userSessions) {
+    } else if (props.sessions) {
       //create new session
-      const docRef = await addDoc(userSessions, {
+      const docRef = await addDoc(props.sessions, {
         start: Timestamp.now(),
         index: currentSession,
       });
@@ -142,7 +141,7 @@ const UploadWithProgressPreview = (props) => {
   const loadFile = async (fileNum) => {
     let sessionID;
     console.log("load file");
-    if (!session && userSessions) {
+    if (!session && props.sessions) {
       sessionID = await loadSession();
     } else {
       sessionID = session.id;
@@ -154,29 +153,12 @@ const UploadWithProgressPreview = (props) => {
     }
   };
 
-  const firebaseUser = async () => {
-    try {
-      const uRef = doc(db, "users", props.uid);
-      const uDoc = await getDoc(uRef);
-      setUserDoc(uDoc);
-      setUserSessions(collection(db, "users/" + props.uid + "/sessions"));
-    } catch (e) {
-      console.error("Error retrieving user firebase doc: ", e);
-    }
-  };
-
-  React.useEffect(() => {
-    if (props.uid) {
-      firebaseUser();
-    }
-  }, [props.uid]);
-
   React.useEffect(() => {
     reset();
   }, [fileIndex]);
 
   const reset = () => {
-    console.log("Reset");
+    console.log("Reset overlay");
     setItemNum(itemNum + 1);
   };
 
@@ -193,15 +175,31 @@ const UploadWithProgressPreview = (props) => {
   };
 
   const placeholder = () => {
-    if (fileIndex == null) {
-      return;
+    if (session == null) {
+      const text = "Begin Session";
+      const click = () => {
+        console.log("begin session");
+        loadFile(0);
+      };
+      const className = "upload";
+      return (
+        <div className="placeholder">
+          <button
+            className={className}
+            onClick={click}
+            style={{ width: "30vw", height: "20vh", fontSize: "min(3vw,5vh)" }}
+          >
+            {text}
+          </button>
+        </div>
+      );
     }
   };
 
   const clearOverlay = () => {
     setDataDoc(null);
     setSavedData(null);
-    reset();
+    setFileIndex(null);
   };
 
   const previousImage = () => {
@@ -222,6 +220,17 @@ const UploadWithProgressPreview = (props) => {
     }
   };
 
+  const closeSession = async () => {
+    clearOverlay();
+
+    //update end timestamp
+    await updateDoc(session.ref, {
+      end: Timestamp.now(),
+    });
+
+    setSession(null);
+  };
+
   const button = () => {
     let text;
     let click;
@@ -236,41 +245,20 @@ const UploadWithProgressPreview = (props) => {
       } else if (fileIndex !== images.length - 1) {
         className = "upload";
         text = "Exit Session";
-        click = async () => {
-          //reset session to null
-          setSession(null);
-          clearOverlay();
-          setFileIndex(null);
-          reset();
-          //update end timestamp
-          await updateDoc(session.ref, {
-            end: Timestamp.now(),
-          });
+        click = () => {
+          closeSession();
           alert("Your progress has been saved.");
         };
       } else if (!unsavedChanges && fileIndex == images.length - 1) {
         className = "upload";
         text = "Finish Session";
-        click = async () => {
-          //reset session to null
-          setSession(null);
-          clearOverlay();
-          setFileIndex(null);
-          reset();
-          //update end timestamp
-          await updateDoc(session.ref, {
-            end: Timestamp.now(),
-          });
+        click = () => {
+          closeSession();
           alert("Session complete. Thank you for participating.");
         };
       }
     } else {
-      text = "Begin Session";
-      click = () => {
-        console.log("begin session");
-        loadFile(0);
-      };
-      className = "upload";
+      return;
     }
     return (
       <button className={className} onClick={click}>
@@ -289,14 +277,7 @@ const UploadWithProgressPreview = (props) => {
         {button()}
       </div>
       <div className="Content">
-        <div className="Announcements">
-          {accession
-            ? accession +
-              " (" +
-              (xray ? xray : "UPLOAD AN IMAGE TO BEGIN MASKING") +
-              ")"
-            : "Click to set an endpoint for a line segment, indicating the endplate."}
-        </div>
+        <div className="Announcements">{text}</div>
         {fileIndex !== null && !unsavedChanges && fileIndex > 0 ? (
           <div className="button-previous" onClick={previousImage}>
             Previous
@@ -333,6 +314,7 @@ const UploadWithProgressPreview = (props) => {
               realWidth={realWidth}
               realHeight={realHeight}
               edits={setunsavedChanges}
+              instructions={props.instructions}
             />
           )}
         </div>

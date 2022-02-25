@@ -61,7 +61,7 @@ button.upload {
   margin: 5px;
   flex-basis: 250px;
   max-width: 33vw;
-  font-size: auto;
+  font-size: 1.5vw;
   background-color: white;
   border: 2px solid white;
   border-radius: 5px;
@@ -131,8 +131,8 @@ button.upload-disabled:active {
 }
 
 .Announcements {
-  flex-basis: 10px;
-  font-size: 10px;
+  flex-basis: 16px;
+  font-size: 16px;
   text-align: center;
   z-index: 2;
 }
@@ -146,7 +146,7 @@ button.upload-disabled:active {
 
 .PreviewContainer {
   display: flex;
-  height: 90vh;
+  height: 89vh;
   max-height: 100%;
   max-width: 100%;
   user-select: none;
@@ -394,4 +394,11 @@ button.upload-disabled:active {
   opacity: 0.2;
   cursor: not-allowed;
   user-select: none;
+}
+.placeholder {
+  display: flex;
+  width: 100vw;
+  padding-top: 20vh;
+  padding-bottom: 20vh;
+  justify-content: center;
 }
