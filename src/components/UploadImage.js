@@ -181,7 +181,7 @@ const UploadWithProgressPreview = (props) => {
       text = "Begin Session";
       click = () => {
         console.log("begin session");
-        props.instructions.set("To Edit");
+        props.instructions.set("select level");
         loadFile(0);
       };
     } else {
@@ -215,6 +215,7 @@ const UploadWithProgressPreview = (props) => {
     if (!unsavedChanges && fileIndex !== null && fileIndex > 0) {
       clearOverlay();
       loadFile(fileIndex - 1);
+      props.instructions.set("select level");
     }
   };
 
@@ -226,10 +227,12 @@ const UploadWithProgressPreview = (props) => {
     ) {
       clearOverlay();
       loadFile(fileIndex + 1);
+      props.instructions.set("select level");
     } else if (fileIndex == images.length - 1) {
       setDataDoc(null);
       setSavedData(null);
       setFileIndex(fileIndex + 1);
+      props.instructions.set("end");
     }
   };
 
@@ -260,7 +263,7 @@ const UploadWithProgressPreview = (props) => {
         text = "Pause Session";
         click = () => {
           closeSession();
-          props.instructions.set("Farewell");
+          props.instructions.set("Pause");
           alert("Your progress has been saved.");
         };
       } else {

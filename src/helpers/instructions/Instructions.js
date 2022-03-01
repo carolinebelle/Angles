@@ -39,7 +39,7 @@ export default class Instructions {
         this.updateText(this.greeting());
         break;
       case "farewell":
-        this.updateText(`Session complete!`);
+        this.updateText(`Thank you, ${this.name}!`);
         break;
       case "to edit":
         this.updateText(
@@ -63,6 +63,16 @@ export default class Instructions {
         break;
       case "select level":
         this.updateText("Select a level from the right panel.");
+        break;
+      case "pause":
+        this.updateText(
+          "Your progress has been saved. You may come back and resume your session at any point."
+        );
+        break;
+      case "end":
+        this.updateText(
+          "You have completed all of the x-rays. Click the button to submit your work."
+        );
         break;
       default:
         this.updateText(str);

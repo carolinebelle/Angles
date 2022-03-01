@@ -32,7 +32,6 @@ export default class Overlay extends React.Component {
 
       points: new Array(this.maxPoints * 2).fill(null),
       startPoints: new Array(this.maxPoints * 2).fill(null),
-      editing: false,
 
       //confirmation control
       needConfirmation: false,
@@ -115,7 +114,6 @@ export default class Overlay extends React.Component {
 
   confirmedDelete() {
     this.toggleLevel(-1);
-    this.setState({ editing: true });
     this.save(true);
     this.data = new Data();
     this.setState({
@@ -169,9 +167,7 @@ export default class Overlay extends React.Component {
       }
 
       if (this.state.currentLevel == -1 && level != -1) {
-        this.setState({ editing: true });
       } else if (level == -1) {
-        this.setState({ editing: false });
         this.props.instructions.set("To Edit");
       }
 
@@ -695,7 +691,6 @@ export default class Overlay extends React.Component {
           levelDelete={this.levelDelete}
           currentLevel={this.state.currentLevel}
           edits={() => {
-            this.setState({ editing: true });
             this.props.instructions.set("select level");
           }}
         />
