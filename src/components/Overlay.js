@@ -9,8 +9,9 @@ import { Stage, Layer } from "react-konva";
 import Confirmation from "./Confirmation";
 import ControlPanel from "./ControlPanel";
 
-import { updateDoc, deleteField, setDoc } from "../Firebase";
+import { setDoc } from "../Firebase";
 import { Data } from "../helpers";
+import SinceSave from "./SinceSave";
 
 //TODO: selectively delete points and lines
 
@@ -29,8 +30,8 @@ export default class Overlay extends React.Component {
       mouseX: null,
       mouseY: null,
 
-      points: null,
-      startPoints: null,
+      points: new Array(this.maxPoints * 2).fill(null),
+      startPoints: new Array(this.maxPoints * 2).fill(null),
       editing: false,
 
       //confirmation control
@@ -40,6 +41,8 @@ export default class Overlay extends React.Component {
       explantaion: "Would you like to confirm [action]",
       confirm: "Confirm",
       cancel: "Cancel",
+
+      saveTime: Date.now(),
     };
     this.data = new Data(this.props.data.array);
     this.lineBorderWidth = 2;
@@ -101,22 +104,25 @@ export default class Overlay extends React.Component {
   levelDelete(index) {
     if (this.state.currentLevel == index) {
       this.setState({
-        points: new Array(this.maxPoints * 2),
-        startPoints: new Array(this.maxPoints * 2),
+        points: new Array(this.maxPoints * 2).fill(null),
+        startPoints: new Array(this.maxPoints * 2).fill(null),
         draw: true,
         active: false,
       });
+      this.props.instructions.set("begin annotate", index);
     }
   }
 
   confirmedDelete() {
     this.toggleLevel(-1);
+    this.setState({ editing: true });
     this.save(true);
     this.data = new Data();
     this.setState({
-      points: new Array(this.maxPoints * 2),
-      startPoints: new Array(this.maxPoints * 2),
+      points: new Array(this.maxPoints * 2).fill(null),
+      startPoints: new Array(this.maxPoints * 2).fill(null),
     });
+    this.props.instructions.set("select level");
   }
 
   toggleLevel(level) {
@@ -138,14 +144,13 @@ export default class Overlay extends React.Component {
           startPoints: null,
           currentLevel: -1,
         });
-        this.save();
       } else {
         if (this.data.getVert(level)) {
           toLoad = this.data.getVertArray(level);
           newCurrent = this.data.getVertArray(level);
         } else {
-          toLoad = new Array(this.maxPoints * 2);
-          newCurrent = new Array(this.maxPoints * 2);
+          toLoad = new Array(this.maxPoints * 2).fill(null);
+          newCurrent = new Array(this.maxPoints * 2).fill(null);
         }
 
         //load new, save old
@@ -158,6 +163,7 @@ export default class Overlay extends React.Component {
 
       if (level == -1 || this.state.currentLevel == level) {
         this.setState({ active: false, draw: false });
+        this.props.instructions.set("Select level");
       } else {
         this.canDraw(level, toLoad);
       }
@@ -166,7 +172,10 @@ export default class Overlay extends React.Component {
         this.setState({ editing: true });
       } else if (level == -1) {
         this.setState({ editing: false });
+        this.props.instructions.set("To Edit");
       }
+
+      this.save();
     } else {
       alert(
         "You are actively drawing. Do not attempt to switch masks while actively drawing."
@@ -177,7 +186,6 @@ export default class Overlay extends React.Component {
   /* Editing current level **********************************/
 
   canDraw(level, points) {
-    console.log("can draw");
     let currentLevel = level || level == 0 ? level : this.state.currentLevel;
     let currentPoints = points ? points : this.state.startPoints;
 
@@ -195,13 +203,17 @@ export default class Overlay extends React.Component {
 
       if (empty == 0 || empty == 3) {
         this.setState({ draw: true, active: false });
+        this.props.instructions.set("Begin Annotate", level);
       } else if (empty == 1 || empty == 2) {
         this.setState({ draw: true, active: true });
+        this.props.instructions.set("Second point", level);
       } else {
         this.setState({ draw: false, active: false });
+        this.props.instructions.set("Drag edit", level);
       }
     } else {
       this.setState({ draw: false, active: false });
+      this.props.instructions.set("Select level");
     }
   }
 
@@ -218,11 +230,12 @@ export default class Overlay extends React.Component {
 
   activeLine = () => {
     if (this.state.active && this.state.mouseX && this.state.mouseY) {
-      let coords;
+      let coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
+      let x1 = coords.x;
+      let y1 = coords.y;
+
       let x0;
       let y0;
-      let x1;
-      let y1;
       if (!this.state.points[2] && this.state.points[0]) {
         coords = this.realToScreenCoords(
           this.state.points[0],
@@ -230,9 +243,6 @@ export default class Overlay extends React.Component {
         );
         x0 = coords.x;
         y0 = coords.y;
-        coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
-        x1 = coords.x;
-        y1 = coords.y;
       } else if (!this.state.points[4] && this.state.points[6]) {
         coords = this.realToScreenCoords(
           this.state.points[6],
@@ -240,9 +250,6 @@ export default class Overlay extends React.Component {
         );
         x0 = coords.x;
         y0 = coords.y;
-        coords = this.fromImgCoords(this.state.mouseX, this.state.mouseY);
-        x1 = coords.x;
-        y1 = coords.y;
       }
       return (
         <Line
@@ -318,35 +325,6 @@ export default class Overlay extends React.Component {
     }
   }
 
-  updateManyPositions(updates) {
-    this.props.edits(true);
-    //deep copy of points and startPoints
-    let iPoints = [...this.state.startPoints];
-    let updatedPoints = [...this.state.points];
-
-    updates.forEach((element) => {
-      //[initial, index, x, y]
-      let initial = element[0];
-      let index = element[1];
-      let x = element[2];
-      let y = element[3];
-
-      if (initial) {
-        //add to startPoints and points
-        iPoints[index] = x;
-        iPoints[index + 1] = y;
-        updatedPoints[index] = x;
-        updatedPoints[index + 1] = y;
-      } else {
-        // only add to points
-        updatedPoints[index] = x;
-        updatedPoints[index + 1] = y;
-      }
-    });
-
-    this.setState({ startPoints: iPoints, points: updatedPoints }); //possible
-  }
-
   /* Statistics **********************************************/
 
   getAngles() {
@@ -368,8 +346,6 @@ export default class Overlay extends React.Component {
             this.state.startPoints[val],
             this.state.startPoints[val + 1]
           );
-          // return this.state.startPoints.map((point, index) => {
-          //   let { imgX, imgY } = this.realToImgCoords(point[0], point[1]);
           return (
             <Point
               key={val + ": " + imgX + "," + imgY}
@@ -416,11 +392,17 @@ export default class Overlay extends React.Component {
           //add midpoints
           this.updatePosition(true, index, x, y);
           this.setState({ active: false }); //no longer actively drawing a line segment
+          this.props.instructions.set(
+            "begin annotate",
+            this.state.currentLevel
+          );
         } else if (index == 4) {
           this.updatePosition(true, index, x, y);
           this.setState({ draw: false, active: false }); //no longer actively drawing a line segment, done adding points
+          this.props.instructions.set("drag edit", this.state.currentLevel);
         } else {
           this.setState({ draw: false, active: false }); //no more slots to fill, done adding points
+          this.props.instructions.set("drag edit", this.state.currentLevel);
         }
       } else {
         //first point of line
@@ -433,6 +415,7 @@ export default class Overlay extends React.Component {
         if (index != -1) {
           this.updatePosition(true, index, x, y); //added a point
           this.setState({ active: true }); //actively drawing a line segment
+          this.props.instructions.set("second point");
         }
       }
     }
@@ -491,7 +474,7 @@ export default class Overlay extends React.Component {
       while (i < this.data.length) {
         if (i != this.state.currentLevel && this.data.getVert(i)) {
           let vertArray = this.data.getVertArray(i);
-          let points = new Array(vertArray.length);
+          let points = new Array(vertArray.length).fill(null);
           let countEl = 0;
           for (let j = 0; j < points.length; j += 2) {
             if (vertArray[j] && vertArray[j + 1]) {
@@ -528,7 +511,7 @@ export default class Overlay extends React.Component {
         let vertebra = [];
         if (this.state.points) {
           let imgCoordPoints;
-          imgCoordPoints = new Array(this.state.points.length);
+          imgCoordPoints = new Array(this.state.points.length).fill(null);
           for (let j = 0; j < this.state.points.length; j += 2) {
             if (this.state.points[j] & this.state.points[j + 1]) {
               let { imgX, imgY } = this.realToImgCoords(
@@ -552,7 +535,7 @@ export default class Overlay extends React.Component {
         while (i < this.data.length) {
           if (i != this.state.currentLevel && this.data.getVert(i)) {
             let vertArray = this.data.getVertArray(i);
-            let points = new Array(vertArray.length);
+            let points = new Array(vertArray.length).fill(null);
             for (let j = 0; j < vertArray.length; j += 2) {
               if (vertArray[j] && vertArray[j + 1]) {
                 let { imgX, imgY } = this.realToImgCoords(
@@ -630,14 +613,14 @@ export default class Overlay extends React.Component {
     const splits = [4, 4, 4, 4, 4, 2];
     const total = splits.reduce((partialSum, a) => partialSum + a) * 2;
     const valid = total == arr.length;
-    let nestedArray = new Array(splits.length);
+    let nestedArray = new Array(splits.length).fill(null);
     let index = 0;
 
     for (let i = 0; i < nestedArray.length; i++) {
       if (valid) {
         nestedArray[i] = arr.slice(index, index + splits[i] * 2);
       } else {
-        nestedArray[i] = new Array(splits[i] * 2);
+        nestedArray[i] = new Array(splits[i] * 2).fill(null);
       }
       index += splits[i] * 2;
     }
@@ -665,6 +648,7 @@ export default class Overlay extends React.Component {
           { merge: true }
         );
         this.props.edits(false);
+        this.setState({ saveTime: Date.now() });
       } catch (e) {
         console.error("Error updating data for document: ", e);
       }
@@ -713,8 +697,13 @@ export default class Overlay extends React.Component {
           currentLevel={this.state.currentLevel}
           edits={() => {
             this.setState({ editing: true });
+            this.props.instructions.set("select level");
           }}
         />
+        {/* <SinceSave
+          unsaved={this.props.unsaved}
+          lastSave={this.state.saveTime}
+        /> */}
         <Confirmation
           open={this.state.needConfirmation}
           function={this.state.functionToConfirm}

@@ -97,7 +97,7 @@ const UploadWithProgressPreview = (props) => {
       //resume old session
       console.log("Session ID: " + retrievedSession.id);
       setSession(retrievedSession);
-      alert("resuming old session");
+      alert("Resuming previous session.");
       return retrievedSession.id;
     } else if (props.sessions) {
       //create new session
@@ -179,6 +179,7 @@ const UploadWithProgressPreview = (props) => {
       const text = "Begin Session";
       const click = () => {
         console.log("begin session");
+        props.instructions.set("To Edit");
         loadFile(0);
       };
       const className = "upload";
@@ -247,6 +248,7 @@ const UploadWithProgressPreview = (props) => {
         text = "Exit Session";
         click = () => {
           closeSession();
+          props.instructions.set("Farewell");
           alert("Your progress has been saved.");
         };
       } else if (!unsavedChanges && fileIndex == images.length - 1) {
@@ -254,6 +256,7 @@ const UploadWithProgressPreview = (props) => {
         text = "Finish Session";
         click = () => {
           closeSession();
+          props.instructions.set("Farewell");
           alert("Session complete. Thank you for participating.");
         };
       }
@@ -313,6 +316,7 @@ const UploadWithProgressPreview = (props) => {
               imgHeight={height}
               realWidth={realWidth}
               realHeight={realHeight}
+              unsaved={unsavedChanges}
               edits={setunsavedChanges}
               instructions={props.instructions}
             />

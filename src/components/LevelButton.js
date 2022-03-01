@@ -32,7 +32,7 @@ export default class Mask extends Component {
         >
           {this.props.level}
         </div>
-        {this.props.active ? (
+        {this.props.active && this.props.delete ? (
           <div
             onClick={
               this.props.index == 100

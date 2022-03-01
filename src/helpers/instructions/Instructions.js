@@ -2,9 +2,6 @@ export default class Instructions {
   constructor() {
     this.name = "participant";
 
-    this.toEdit =
-      "Click EDIT to begin drawing line segments to annotate the endplates.";
-
     const hour = new Date().getHours();
     this.timeOfDay =
       (hour < 12 && "morning") || (hour < 17 && "afternoon") || "evening";
@@ -35,25 +32,45 @@ export default class Instructions {
     return `Good ${this.timeOfDay}, ${this.name}!`;
   }
 
-  farewell() {
-    return `Session complete, ${this.name}!`;
-  }
-
-  set(str) {
+  set(str, level) {
+    const translate = ["S1", "L1", "L2", "L3", "L4", "L5"];
     switch (str.toLowerCase()) {
       case "greeting":
-        this.setText(this.greeting());
+        this.updateText(this.greeting());
         break;
       case "farewell":
-        this.setText(this.farewell());
+        this.updateText(`Session complete!`);
+        break;
+      case "to edit":
+        this.updateText(
+          "Click EDIT to begin drawing line segments to annotate the endplates."
+        );
+        break;
+      case "begin annotate":
+        this.updateText(
+          `Click to place an endpoint for a line segment to indicate the superior or inferior endplate of ${translate[level]}.`
+        );
+        break;
+      case "second point":
+        this.updateText(
+          `Click to place the second endpoint of the line segment indicating the endplate.`
+        );
+        break;
+      case "drag edit":
+        this.updateText(
+          `Drag any of the red end squares of ${translate[level]} to fine tune.`
+        );
+        break;
+      case "select level":
+        this.updateText("Select a level from the right panel.");
         break;
       default:
-        this.setText(str);
+        this.updateText(str);
         break;
     }
   }
 
-  setText(str) {
+  updateText(str) {
     if (this.setText) {
       this.setText(str);
     }

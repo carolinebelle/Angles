@@ -402,3 +402,10 @@ button.upload-disabled:active {
   padding-bottom: 20vh;
   justify-content: center;
 }
+.save-text {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  color: rgb(128, 155, 230);
+  margin-left: 10px;
+}
