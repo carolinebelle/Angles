@@ -8,7 +8,7 @@ export default function ControlPanel(props) {
       <LevelButton
         index={100}
         level={"CLEAR"}
-        active={props.open}
+        active={true}
         toggleLevel={props.completeDelete}
         controller={true}
       />

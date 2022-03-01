@@ -175,26 +175,34 @@ const UploadWithProgressPreview = (props) => {
   };
 
   const placeholder = () => {
+    let text;
+    let click;
     if (session == null) {
-      const text = "Begin Session";
-      const click = () => {
+      text = "Begin Session";
+      click = () => {
         console.log("begin session");
         props.instructions.set("To Edit");
         loadFile(0);
       };
-      const className = "upload";
-      return (
-        <div className="placeholder">
-          <button
-            className={className}
-            onClick={click}
-            style={{ width: "30vw", height: "20vh", fontSize: "min(3vw,5vh)" }}
-          >
-            {text}
-          </button>
-        </div>
-      );
+    } else {
+      text = "Finish Session";
+      click = () => {
+        closeSession();
+        props.instructions.set("Farewell");
+        alert("Session complete. Thank you for participating.");
+      };
     }
+    return (
+      <div className="placeholder">
+        <button
+          className={"upload"}
+          onClick={click}
+          style={{ width: "30vw", height: "20vh", fontSize: "min(3vw,5vh)" }}
+        >
+          {text}
+        </button>
+      </div>
+    );
   };
 
   const clearOverlay = () => {
@@ -218,6 +226,10 @@ const UploadWithProgressPreview = (props) => {
     ) {
       clearOverlay();
       loadFile(fileIndex + 1);
+    } else if (fileIndex == images.length - 1) {
+      setDataDoc(null);
+      setSavedData(null);
+      setFileIndex(fileIndex + 1);
     }
   };
 
@@ -243,22 +255,16 @@ const UploadWithProgressPreview = (props) => {
         click = async () => {
           alert("You have unsaved changes.");
         };
-      } else if (fileIndex !== images.length - 1) {
+      } else if (fileIndex !== images.length) {
         className = "upload";
-        text = "Exit Session";
+        text = "Pause Session";
         click = () => {
           closeSession();
           props.instructions.set("Farewell");
           alert("Your progress has been saved.");
         };
-      } else if (!unsavedChanges && fileIndex == images.length - 1) {
-        className = "upload";
-        text = "Finish Session";
-        click = () => {
-          closeSession();
-          props.instructions.set("Farewell");
-          alert("Session complete. Thank you for participating.");
-        };
+      } else {
+        return;
       }
     } else {
       return;
@@ -288,9 +294,7 @@ const UploadWithProgressPreview = (props) => {
         ) : (
           <div className="button-previous-disabled">Previous</div>
         )}
-        {fileIndex !== null &&
-        !unsavedChanges &&
-        fileIndex < images.length - 1 ? (
+        {fileIndex !== null && !unsavedChanges && fileIndex < images.length ? (
           <div className="button-next" onClick={nextImage}>
             Next
           </div>
@@ -299,7 +303,11 @@ const UploadWithProgressPreview = (props) => {
         )}
         <div className="dropzone">
           <CustomImagePreview
-            file={fileIndex !== null ? images[fileIndex] : null}
+            file={
+              fileIndex !== null && fileIndex < images.length
+                ? images[fileIndex]
+                : null
+            }
             handler={setCoords}
             scaler={setReal}
           />

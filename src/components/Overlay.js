@@ -686,7 +686,6 @@ export default class Overlay extends React.Component {
           {this.draw()}
         </div>
         <ControlPanel
-          open={this.state.editing}
           save={() => {
             this.toggleLevel(-1);
             this.save();
