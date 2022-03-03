@@ -282,7 +282,7 @@ export default class Overlay extends React.Component {
               style={{
                 top: this.state.mouseY - 6.5,
                 left: this.state.mouseX - 7.5,
-                border: "2px solid grey",
+                border: "2px solid red",
                 cursor: "none",
               }}
             />
@@ -707,6 +707,7 @@ export default class Overlay extends React.Component {
           cancel={this.state.cancel}
           handler={(bool) => this.setState({ needConfirmation: bool })}
         />
+        {this.props.alert}
       </>
     );
   }

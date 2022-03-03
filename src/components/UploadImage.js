@@ -20,6 +20,7 @@ import sample1 from "../images/sample2.jpeg";
 import sample2 from "../images/sample3.png";
 import { Timestamp } from "@firebase/firestore";
 import { Data } from "../helpers";
+import Alert from "./Alert";
 
 //current sessionNum
 const currentSession = 1; //number 1 session
@@ -85,6 +86,7 @@ const UploadWithProgressPreview = (props) => {
   const [dataDoc, setDataDoc] = useState(null);
 
   const [savedData, setSavedData] = useState(null);
+  const [isAlert, setIsAlert] = useState(null);
 
   const [text, setText] = useState(props.instructions.greeting());
   props.instructions.displayText(setText); //enable Instructions object to display text
@@ -97,7 +99,7 @@ const UploadWithProgressPreview = (props) => {
       //resume old session
       console.log("Session ID: " + retrievedSession.id);
       setSession(retrievedSession);
-      alert("Resuming previous session.");
+      setIsAlert(true);
       return retrievedSession.id;
     } else if (props.sessions) {
       //create new session
@@ -189,7 +191,6 @@ const UploadWithProgressPreview = (props) => {
       click = () => {
         closeSession();
         props.instructions.set("Farewell");
-        alert("Session complete. Thank you for participating.");
       };
     }
     return (
@@ -255,16 +256,12 @@ const UploadWithProgressPreview = (props) => {
       if (unsavedChanges) {
         className = "upload-disabled";
         text = "Unsaved Changes";
-        click = async () => {
-          alert("You have unsaved changes.");
-        };
       } else if (fileIndex !== images.length) {
         className = "upload";
         text = "Pause Session";
         click = () => {
           closeSession();
           props.instructions.set("Pause");
-          alert("Your progress has been saved.");
         };
       } else {
         return;
@@ -330,6 +327,13 @@ const UploadWithProgressPreview = (props) => {
               unsaved={unsavedChanges}
               edits={setunsavedChanges}
               instructions={props.instructions}
+              alert={
+                <Alert
+                  open={isAlert}
+                  text={"Resuming session"}
+                  handler={setIsAlert}
+                />
+              }
             />
           )}
         </div>

@@ -1,13 +1,14 @@
 import React from "react";
 import LevelButton from "./LevelButton";
 import "./styles.css";
+import { HiTrash } from "react-icons/hi";
 
 export default function ControlPanel(props) {
   return (
     <div className="rightPanel">
       <LevelButton
         index={100}
-        level={"CLEAR"}
+        level={<HiTrash />}
         active={true}
         toggleLevel={props.completeDelete}
         controller={true}
