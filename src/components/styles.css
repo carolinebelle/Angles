@@ -126,7 +126,7 @@ button.upload-disabled {
 
 .Announcements {
   flex-basis: 16px;
-  font-size: min(24pt, 2.5em);
+  font-size: min(24pt, 2em);
   text-align: center;
   z-index: 2;
 }
@@ -313,14 +313,13 @@ button.upload-disabled {
   box-shadow: 2px 2px 3px #999;
   z-index: 11;
   height: 5vh;
-  width: 5vw;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 1.5em;
   cursor: pointer;
   margin: 5px;
-  padding: 2px;
+  padding: 5px;
   user-select: none;
 }
 .button-next {
@@ -333,14 +332,13 @@ button.upload-disabled {
   box-shadow: 2px 2px 3px #999;
   z-index: 11;
   height: 5vh;
-  width: 5vw;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 1.5em;
   cursor: pointer;
   margin: 5px;
-  padding: 2px;
+  padding: 5px;
   user-select: none;
 }
 .button-next:hover {
@@ -361,13 +359,12 @@ button.upload-disabled {
   box-shadow: 2px 2px 3px #999;
   z-index: 11;
   height: 5vh;
-  width: 5vw;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 1.5em;
   margin: 5px;
-  padding: 2px;
+  padding: 5px;
   opacity: 0.2;
   user-select: none;
   cursor: not-allowed;
@@ -382,13 +379,12 @@ button.upload-disabled {
   box-shadow: 2px 2px 3px #999;
   z-index: 11;
   height: 5vh;
-  width: 5vw;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 1.5em;
   margin: 5px;
-  padding: 2px;
+  padding: 5px;
   opacity: 0.2;
   cursor: not-allowed;
   user-select: none;
