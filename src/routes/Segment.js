@@ -7,6 +7,7 @@ import Instructions from "../helpers/instructions/Instructions";
 // import { authLogin, authLogout } from "../features";
 
 // import { useDispatch } from "react-redux";
+const officialImages = true;
 
 function Segment() {
   const [user, loading, error] = useAuthState(auth);
@@ -48,6 +49,7 @@ function Segment() {
         uid={uid}
         instructions={instructions}
         sessions={collection(db, "users/" + uid + "/sessions")}
+        officialImages={officialImages}
       />
     );
   } else {

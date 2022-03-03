@@ -15,20 +15,43 @@ import {
   setDoc,
 } from "../Firebase";
 import Confirmation from "./Confirmation";
-import sample0 from "../images/sample1.jpeg";
-import sample1 from "../images/sample2.jpeg";
-import sample2 from "../images/sample3.png";
 import { Timestamp } from "@firebase/firestore";
 import { Data } from "../helpers";
 import Alert from "./Alert";
 
 //current sessionNum
 const currentSession = 1; //number 1 session
-const images = [sample0, sample1, sample2];
+
+//sample images
+import sample0 from "../images/sample1.jpeg";
+import sample1 from "../images/sample2.jpeg";
+import sample2 from "../images/sample3.png";
+
+//real images
+import image1 from "../images/7854ec4b-85f2-4e9c-8235-a16fc6111065.png";
+import image2 from "../images/9b5b6e19-1eef-4dde-a176-777bd4d1b216.png";
+import image3 from "../images/9e8a4fb5-c624-40d1-9659-b2bd4da44c4f.png";
+import image4 from "../images/c4f8667e-7d92-4cbf-9485-8a146834a1bc.png";
+import image5 from "../images/d03d9a81-464e-4180-a12e-828c4594d066.png";
+import image6 from "../images/efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a.png";
+
+//test images
+// const images = [sample0, sample1, sample2];
+// const docKeys = [
+//   "sSqhk7NRwn5ZqKUwS9BQ",
+//   "flhHBeFxP8lyvHPcZiPt",
+//   "gKWMYvxTDzyP8F7yF8Th",
+// ];
+
+//official images
+const images = [image1, image2, image3, image4, image5, image6];
 const docKeys = [
-  "sSqhk7NRwn5ZqKUwS9BQ",
-  "flhHBeFxP8lyvHPcZiPt",
-  "gKWMYvxTDzyP8F7yF8Th",
+  "7854ec4b-85f2-4e9c-8235-a16fc6111065",
+  "9b5b6e19-1eef-4dde-a176-777bd4d1b216",
+  "9e8a4fb5-c624-40d1-9659-b2bd4da44c4f",
+  "c4f8667e-7d92-4cbf-9485-8a146834a1bc",
+  "d03d9a81-464e-4180-a12e-828c4594d066",
+  "efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a",
 ];
 
 const CustomImagePreview = ({ file, handler, scaler }) => {
