@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { auth, sendPasswordReset } from "../Firebase";
+import { auth, sendPasswordReset } from "../../Firebase";
 import "./reset.css";
-import "./login.css";
+import "../login/login.css";
 
 function Reset() {
   const [email, setEmail] = useState("");
@@ -19,7 +19,7 @@ function Reset() {
 
   useEffect(() => {
     if (loading) return;
-    if (user) navigate("/Segmentation/segment");
+    if (user) navigate("/segment");
   }, [user, loading]);
   return (
     <div className="reset__page">
@@ -32,10 +32,10 @@ function Reset() {
           placeholder="E-mail Address"
         />
         <button className="reset__btn" onClick={() => sendPasswordReset(email)}>
-          Send password reset email
+          Send Password Reset Email
         </button>
         <div>
-          <Link to="/Segmentation/">Go to log in</Link>
+          <Link to="/">Go to log in</Link>
         </div>
         <div className="login__text">
           <div>Don't have an account?&nbsp;</div>

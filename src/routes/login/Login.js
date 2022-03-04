@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth, logInWithEmailAndPassword } from "../Firebase.js";
+import { auth, logInWithEmailAndPassword } from "../../Firebase.js";
 import { useAuthState } from "react-firebase-hooks/auth";
 import "./login.css";
 
@@ -21,7 +21,7 @@ function Login() {
       // maybe trigger a loading screen
       return;
     }
-    if (user) navigate("/Segmentation/segment");
+    if (user) navigate("/segment");
   }, [user, loading]);
   return (
     <div className="login">
@@ -47,7 +47,7 @@ function Login() {
           Login
         </button>
         <div>
-          <Link to="/Segmentation/reset">Forgot Password</Link>
+          <Link to="/reset">Forgot Password</Link>
         </div>
         <div className="login__text">
           <div>Don't have an account?&nbsp;</div>

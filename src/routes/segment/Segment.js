@@ -1,9 +1,9 @@
-import UploadImage from "../components/UploadImage";
+import UploadImage from "../../components/UploadImage";
 import React, { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
-import { auth, doc, db, collection, getDoc } from "../Firebase";
-import Instructions from "../helpers/instructions/Instructions";
+import { auth, doc, db, collection, getDoc } from "../../Firebase";
+import Instructions from "../../helpers/instructions/Instructions";
 // import { authLogin, authLogout } from "../features";
 
 // import { useDispatch } from "react-redux";
@@ -22,7 +22,7 @@ function Segment() {
     if (!user) {
       setUid(null);
       // dispatch(authLogout());
-      return navigate("/Segmentation/");
+      return navigate("/");
     } else {
       setUid(user.uid);
       firebaseUser(user.uid);
