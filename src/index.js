@@ -9,7 +9,7 @@ import { store } from "./app/store.js";
 
 const rootElement = document.getElementById("root");
 ReactDOM.render(
-  <BrowserRouter basename="/Segmentation">
+  <BrowserRouter basename="/Angles">
     <Provider store={store}>
       <App />
     </Provider>
