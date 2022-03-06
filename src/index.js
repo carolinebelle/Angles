@@ -9,7 +9,7 @@ import { store } from "./app/store.js";
 
 const rootElement = document.getElementById("root");
 ReactDOM.render(
-  <BrowserRouter basename="/Angles">
+  <BrowserRouter>
     <Provider store={store}>
       <App />
     </Provider>
