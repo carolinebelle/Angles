@@ -22,18 +22,37 @@ import Alert from "./Alert";
 //current sessionNum
 const currentSession = 1; //number 1 session
 
-//sample images
-import sample0 from "../images/sample1.jpeg";
-import sample1 from "../images/sample2.jpeg";
-import sample2 from "../images/sample3.png";
+// //sample images
+// import sample0 from "../images/sample1.jpeg";
+// import sample1 from "../images/sample2.jpeg";
+// import sample2 from "../images/sample3.png";
 
 //real images
-import image1 from "../images/7854ec4b-85f2-4e9c-8235-a16fc6111065.png";
-import image2 from "../images/9b5b6e19-1eef-4dde-a176-777bd4d1b216.png";
-import image3 from "../images/9e8a4fb5-c624-40d1-9659-b2bd4da44c4f.png";
-import image4 from "../images/c4f8667e-7d92-4cbf-9485-8a146834a1bc.png";
-import image5 from "../images/d03d9a81-464e-4180-a12e-828c4594d066.png";
-import image6 from "../images/efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a.png";
+import image0 from "../images/09d6d661-5c96-475f-84fc-a396f7dbf751.png";
+import image1 from "../images/19c4762b-25a3-4f75-9289-70c5ea396271.png";
+import image2 from "../images/1cfe0593-7a26-483f-afb4-a304387971f2.png";
+import image3 from "../images/3147ba94-28ec-4420-9412-2c203b7c759d.png";
+import image4 from "../images/31e885e5-5267-44b5-aa66-843b2754f549.png";
+import image5 from "../images/3546267a-20dc-432e-aad6-736f1d11b3dd.png";
+import image6 from "../images/49f9e813-66bf-46e1-a0d9-45e658398f4a.png";
+import image7 from "../images/4e0255c7-1a07-4840-9120-660faf66fa13.png";
+import image8 from "../images/69c34174-48a2-4014-9696-7ad97bf05686.png";
+import image9 from "../images/7854ec4b-85f2-4e9c-8235-a16fc6111065.png";
+import image10 from "../images/9b5b6e19-1eef-4dde-a176-777bd4d1b216.png";
+import image11 from "../images/9e8a4fb5-c624-40d1-9659-b2bd4da44c4f.png";
+import image12 from "../images/a9ba5695-4d0f-4878-8ac7-57307d41a6f4.png";
+import image13 from "../images/ac99a706-6115-419d-b27b-5dac8ebca73c.png";
+import image14 from "../images/c4f8667e-7d92-4cbf-9485-8a146834a1bc.png";
+import image15 from "../images/ced9c518-4815-4e8f-b6db-f6bd8a73b675.png";
+import image16 from "../images/d03d9a81-464e-4180-a12e-828c4594d066.png";
+import image17 from "../images/d70e08df-2a7b-4d8c-a290-3cff5f137346.png";
+import image18 from "../images/e59efe16-df24-4d9e-b8e1-0848880cc200.png";
+import image19 from "../images/e76df50f-60e2-419c-87bc-3806b3343afd.png";
+import image20 from "../images/efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a.png";
+import image21 from "../images/f6198cca-b03c-431c-9ba2-445470a15c54.png";
+import image22 from "../images/f983cf99-7aaf-4f16-b2be-58ba83770755.png";
+
+const n = 23;
 
 //test images
 // const images = [sample0, sample1, sample2];
@@ -44,14 +63,56 @@ import image6 from "../images/efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a.png";
 // ];
 
 //official images
-const images = [image1, image2, image3, image4, image5, image6];
+const images = [
+  image0,
+  image1,
+  image2,
+  image3,
+  image4,
+  image5,
+  image6,
+  image7,
+  image8,
+  image9,
+  image10,
+  image11,
+  image12,
+  image13,
+  image14,
+  image15,
+  image16,
+  image17,
+  image18,
+  image19,
+  image20,
+  image21,
+  image22,
+];
+
 const docKeys = [
+  "09d6d661-5c96-475f-84fc-a396f7dbf751",
+  "19c4762b-25a3-4f75-9289-70c5ea396271",
+  "1cfe0593-7a26-483f-afb4-a304387971f2",
+  "3147ba94-28ec-4420-9412-2c203b7c759d",
+  "31e885e5-5267-44b5-aa66-843b2754f549",
+  "3546267a-20dc-432e-aad6-736f1d11b3dd",
+  "49f9e813-66bf-46e1-a0d9-45e658398f4a",
+  "4e0255c7-1a07-4840-9120-660faf66fa13",
+  "69c34174-48a2-4014-9696-7ad97bf05686",
   "7854ec4b-85f2-4e9c-8235-a16fc6111065",
   "9b5b6e19-1eef-4dde-a176-777bd4d1b216",
   "9e8a4fb5-c624-40d1-9659-b2bd4da44c4f",
+  "a9ba5695-4d0f-4878-8ac7-57307d41a6f4",
+  "ac99a706-6115-419d-b27b-5dac8ebca73c",
   "c4f8667e-7d92-4cbf-9485-8a146834a1bc",
+  "ced9c518-4815-4e8f-b6db-f6bd8a73b675",
   "d03d9a81-464e-4180-a12e-828c4594d066",
+  "d70e08df-2a7b-4d8c-a290-3cff5f137346",
+  "e59efe16-df24-4d9e-b8e1-0848880cc200",
+  "e76df50f-60e2-419c-87bc-3806b3343afd",
   "efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a",
+  "f6198cca-b03c-431c-9ba2-445470a15c54",
+  "f983cf99-7aaf-4f16-b2be-58ba83770755",
 ];
 
 const CustomImagePreview = ({ file, handler, scaler }) => {
@@ -110,6 +171,7 @@ const UploadWithProgressPreview = (props) => {
 
   const [savedData, setSavedData] = useState(null);
   const [isAlert, setIsAlert] = useState(null);
+  const [isResuming, setIsResuming] = useState(null);
 
   const [text, setText] = useState(props.instructions.greeting());
   props.instructions.displayText(setText); //enable Instructions object to display text
@@ -123,6 +185,7 @@ const UploadWithProgressPreview = (props) => {
       console.log("Session ID: " + retrievedSession.id);
       setSession(retrievedSession);
       setIsAlert(true);
+      setIsResuming(true);
       return retrievedSession.id;
     } else if (props.sessions) {
       //create new session
@@ -133,6 +196,8 @@ const UploadWithProgressPreview = (props) => {
       let createdSession = await getDoc(docRef);
       setSession(createdSession);
       console.log("created session ID: " + createdSession.id);
+      setIsAlert(true);
+      setIsResuming(false);
       return createdSession.id;
     }
   };
@@ -353,7 +418,11 @@ const UploadWithProgressPreview = (props) => {
               alert={
                 <Alert
                   open={isAlert}
-                  text={"Resuming session"}
+                  title={
+                    isResuming
+                      ? "Resuming Session " + currentSession
+                      : "Beginning Session " + currentSession
+                  }
                   handler={setIsAlert}
                 />
               }
