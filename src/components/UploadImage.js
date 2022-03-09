@@ -336,6 +336,29 @@ const UploadWithProgressPreview = (props) => {
     setSession(null);
   };
 
+  const nextPrevButtons = () => {
+    let buttons = [];
+    if (fileIndex !== null && !unsavedChanges && fileIndex > 0) {
+      buttons.push(
+        <div className="button-previous" onClick={previousImage}>
+          Previous
+        </div>
+      );
+    } else {
+      buttons.push(<div className="button-previous-disabled">Previous</div>);
+    }
+    if (fileIndex !== null && !unsavedChanges && fileIndex < images.length) {
+      buttons.push(
+        <div className="button-next" onClick={nextImage}>
+          Next
+        </div>
+      );
+    } else {
+      buttons.push(<div className="button-next-disabled">Next</div>);
+    }
+    return buttons;
+  };
+
   const button = () => {
     let text;
     let click;
@@ -371,24 +394,16 @@ const UploadWithProgressPreview = (props) => {
           Research
           <HiOutlineLogout className="click_icon" onClick={logout} />
         </div>
-        {button()}
+        <div className="counter">
+          {session == null || fileIndex >= images.length
+            ? ""
+            : "(" + (fileIndex + 1) + "/" + images.length + ")"}
+          {button()}
+        </div>
       </div>
       <div className="Content">
         <div className="Announcements">{text}</div>
-        {fileIndex !== null && !unsavedChanges && fileIndex > 0 ? (
-          <div className="button-previous" onClick={previousImage}>
-            Previous
-          </div>
-        ) : (
-          <div className="button-previous-disabled">Previous</div>
-        )}
-        {fileIndex !== null && !unsavedChanges && fileIndex < images.length ? (
-          <div className="button-next" onClick={nextImage}>
-            Next
-          </div>
-        ) : (
-          <div className="button-next-disabled">Next</div>
-        )}
+        {session == null ? null : nextPrevButtons()}
         <div className="dropzone">
           <CustomImagePreview
             file={
@@ -417,6 +432,7 @@ const UploadWithProgressPreview = (props) => {
               instructions={props.instructions}
               alert={
                 <Alert
+                  session={session}
                   open={isAlert}
                   title={
                     isResuming
