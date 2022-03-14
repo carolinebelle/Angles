@@ -1,0 +1,14 @@
+.download {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin: 10px;
+  color: white;
+  font-size: 25pt;
+}
+.download:hover {
+  opacity: 0.5;
+}
+.download:active {
+  opacity: 0.2;
+}
