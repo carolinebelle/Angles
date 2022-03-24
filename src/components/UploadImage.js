@@ -19,9 +19,6 @@ import { Timestamp } from "@firebase/firestore";
 import { Data } from "../helpers";
 import Alert from "./Alert";
 
-//current sessionNum
-const currentSession = 1; //number 1 session
-
 // //sample images
 // import sample0 from "../images/sample1.jpeg";
 // import sample1 from "../images/sample2.jpeg";
@@ -158,6 +155,18 @@ const UploadWithProgressPreview = (props) => {
   const [height, setHeight] = useState(0);
   const [realWidth, setRealWidth] = useState(0);
   const [realHeight, setRealHeight] = useState(0);
+
+  console.log(props.uid);
+  console.log(typeof props.uid);
+
+  //current sessionNum
+  const session2 = {
+    "3btOTajlticmVFQidUIsTnEZ2242": 2,
+    qmWgvdNnqSexrwyRBfSLC8UGo6u2: 2,
+  };
+
+  console.log("Session 2? : " + props.uid in session2);
+  let currentSession = props.uid in session2 ? 2 : 1; //number 1 session
 
   //index of current file
   const [fileIndex, setFileIndex] = useState(null);
