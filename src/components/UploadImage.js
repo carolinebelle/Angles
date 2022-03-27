@@ -163,6 +163,11 @@ const UploadWithProgressPreview = (props) => {
   const session2 = {
     "3btOTajlticmVFQidUIsTnEZ2242": 2,
     qmWgvdNnqSexrwyRBfSLC8UGo6u2: 2,
+    "0sYaMoKF0YOJOQJssDer6bniXbr1": 2,
+    "6DSqER3zZ4ba19Qomw6mWFEniIx2": 2,
+    "0ImyjtaP6kPc4d4yKRjcGifbWjc2": 2,
+    Wy0qtu2EQkg0d7yMkYme86WMrVB3: 2,
+    iShGLyyl2zc0cc6ZxC8XAFpcZbC2: 2,
   };
 
   console.log("Session 2? : " + props.uid in session2);
