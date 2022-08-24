@@ -90,7 +90,7 @@ button.upload-disabled {
   height: 80%;
   flex-basis: 250px;
   max-width: 33vw;
-  font-size: 2em;
+  font-size: 1em;
   background-color: white;
   border: 2px solid white;
   border-radius: 5px;

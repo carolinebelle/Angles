@@ -51,6 +51,6 @@ export default class Endplate {
   }
 
   get complete() {
-    return this.findEmpty() == null;
+    return !this.points.includes(null);
   }
 }

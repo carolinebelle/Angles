@@ -183,6 +183,7 @@ const UploadWithProgressPreview = (props) => {
   const [fileIndex, setFileIndex] = useState(null);
 
   const [unsavedChanges, setunsavedChanges] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
 
   const [session, setSession] = useState(null);
@@ -231,21 +232,24 @@ const UploadWithProgressPreview = (props) => {
     console.log("file number: " + fileNum);
     setDataDoc(docRef);
     const docSnap = await getDoc(docRef);
+    let data;
     if (docSnap.exists()) {
       let retrievedData = docSnap.data().data;
       console.log("Document data:", retrievedData);
       if (!retrievedData) {
-        setSavedData(new Data());
+        data = new Data();
       } else {
-        setSavedData(new Data(retrievedData));
+        data = new Data(retrievedData);
       }
     } else {
       // doc.data() will be undefined in this case
       console.log("No such document!");
-      let data = new Data();
-      setSavedData(data);
+      data = new Data();
       await setDoc(docRef, { user: props.uid, data: null });
     }
+    console.log({ data });
+    setSavedData(data);
+    setIsComplete(data.isComplete);
   };
 
   const loadFile = async (fileNum) => {
@@ -258,8 +262,8 @@ const UploadWithProgressPreview = (props) => {
     }
 
     if (sessionID) {
-      setFileIndex(fileNum);
       retrieveData(fileNum, sessionID);
+      setFileIndex(fileNum);
     }
   };
 
@@ -331,6 +335,7 @@ const UploadWithProgressPreview = (props) => {
   const nextImage = () => {
     if (
       !unsavedChanges &&
+      isComplete &&
       fileIndex !== null &&
       fileIndex < images.length - 1
     ) {
@@ -367,7 +372,12 @@ const UploadWithProgressPreview = (props) => {
     } else {
       buttons.push(<div className="button-previous-disabled">Previous</div>);
     }
-    if (fileIndex !== null && !unsavedChanges && fileIndex < images.length) {
+    if (
+      fileIndex !== null &&
+      !unsavedChanges &&
+      isComplete &&
+      fileIndex < images.length
+    ) {
       buttons.push(
         <div className="button-next" onClick={nextImage}>
           Next
@@ -449,6 +459,7 @@ const UploadWithProgressPreview = (props) => {
               realHeight={realHeight}
               unsaved={unsavedChanges}
               edits={setunsavedChanges}
+              isComplete={setIsComplete}
               instructions={props.instructions}
               alert={
                 <Alert

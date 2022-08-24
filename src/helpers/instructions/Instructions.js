@@ -58,7 +58,7 @@ export default class Instructions {
         break;
       case "drag edit":
         this.updateText(
-          `Drag any of the red end squares of ${translate[level]} to fine tune.`
+          `Drag any of the red end squares of ${translate[level]} to fine tune. (Tip: Double Click mouse to move on)`
         );
         break;
       case "select level":

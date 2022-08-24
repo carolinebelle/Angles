@@ -69,4 +69,12 @@ export default class Data {
   get length() {
     return this.vertebra.length;
   }
+
+  get isComplete() {
+    let isComplete = true;
+    for (const v of this.vertebra) {
+      if (isComplete && !v.complete) isComplete = false;
+    }
+    return isComplete;
+  }
 }

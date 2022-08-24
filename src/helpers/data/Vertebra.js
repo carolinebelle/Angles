@@ -56,6 +56,10 @@ export default class Vertebra {
   }
 
   get complete() {
-    return this.findEmpty() == null;
+    let isComplete = true;
+    for (const endplate of this.endplates) {
+      if (isComplete && !endplate.complete) isComplete = false;
+    }
+    return isComplete;
   }
 }

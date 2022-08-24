@@ -79,9 +79,9 @@ export default class Overlay extends React.Component {
     this.draw = this.draw.bind(this);
   }
 
-  componentWillUnmount() {
-    this.save();
-  }
+  // componentWillUnmount() {
+  //   this.save();
+  // }
 
   maxPoints = 4;
 
@@ -644,6 +644,9 @@ export default class Overlay extends React.Component {
           { merge: true }
         );
         this.props.edits(false);
+        const data = this.data;
+        console.log({ data });
+        this.props.isComplete(this.data.isComplete);
         this.setState({ saveTime: Date.now() });
       } catch (e) {
         console.error("Error updating data for document: ", e);
