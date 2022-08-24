@@ -17,7 +17,6 @@ export default class CopyText extends React.Component {
       this.props.PI +
       "\n";
     navigator.clipboard.writeText(textToCopy);
-    console.log("copied to keyboard");
     //TODO: some kind of visual notification that text has been copied
   }
 

@@ -12,13 +12,11 @@ export default function Confirmation(props) {
   };
 
   const confirm = () => {
-    console.log("confirm");
     props.function();
     props.handler(false);
   };
 
   const cancel = () => {
-    console.log("cancel");
     props.handler(false);
   };
 

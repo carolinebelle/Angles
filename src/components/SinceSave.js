@@ -16,7 +16,6 @@ export default function SinceSave(props) {
   }, [now]);
 
   const formatTime = (millis) => {
-    console.log(millis);
     let seconds = Math.floor(millis / 1000);
     if (seconds > 59) {
       let minutes = Math.floor(seconds / 60);

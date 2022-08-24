@@ -89,7 +89,6 @@ export default class GUI extends React.Component {
   }
 
   toggleLevel(level) {
-    console.log("toggle: " + level);
     if (!this.state.active) {
       if (this.state.currentLevel == -1 && level != -1) {
         this.setState({ editing: true });
@@ -168,10 +167,7 @@ export default class GUI extends React.Component {
     return newLandmarks;
   }
 
-  /* Editing current level **********************************/
-
   canDraw(level, points) {
-    console.log("can draw");
     let currentLevel = level || level == 0 ? level : this.state.currentLevel;
     let currentPoints = points ? points : this.state.startPoints;
 
@@ -213,7 +209,6 @@ export default class GUI extends React.Component {
     }
 
     let save = this.fromNestedArray(landmarks);
-    console.log("to save: " + save);
     if (save) {
       try {
         await updateDoc(this.props.xray, {

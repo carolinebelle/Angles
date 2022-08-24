@@ -21,7 +21,6 @@ export default class Point extends React.Component {
     document.onselectstart = function () {
       return false;
     };
-    console.log(this.props.index);
     const { x, y } = this.state.deltaPosition;
     this.setState({
       deltaPosition: {

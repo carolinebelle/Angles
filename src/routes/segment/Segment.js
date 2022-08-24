@@ -134,14 +134,12 @@ function Segment() {
       const querySnapshot = await getDocs(collection(db, `users`));
       await Promise.all(
         querySnapshot.docs.map(async (doc) => {
-          console.log("userID:" + doc.id);
           try {
             const subcollectionSnapshot = await getDocs(
               collection(db, `users/${doc.id}/sessions`)
             );
             subcollectionSnapshot.forEach((session) => {
               // doc.data() is never undefined for query doc snapshots
-              console.log(session.id + ": " + session.data());
               let size = session.data().size ? session.data().size : null;
               if (size && size.indexOf('"') != -1) {
                 size = size.replace('"', "in");
@@ -168,16 +166,10 @@ function Segment() {
     } catch (e) {
       console.error("Error retrieving users: ", e);
     }
-    console.log(arr);
     setUserData(arr);
   };
 
   const checkStatus = () => {
-    // for each image check sessions data array
-    // "complete" = array does not contain null
-    // "mostly complete" = array contains <= 8 null items
-    // "incomplete" = >8 null items
-    // create status dict by {imageID : {sessionID: "status"}}
     var copy = [];
 
     for (var i = 0; i < csvImageData.length; i++)
@@ -199,10 +191,6 @@ function Segment() {
       }
     });
 
-    console.log(s_dict);
-    // for each user check sessions
-    // for each session: check which imageID's have which status
-    // generate three arrays: complete, mostly complete, incomplete
     let u_dict = {};
     csvUserData.forEach((row) => {
       if (row[4] in s_dict) {

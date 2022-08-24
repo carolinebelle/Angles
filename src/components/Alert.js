@@ -22,8 +22,6 @@ export default function Alert(props) {
         if (foundError) setError(foundError + 1);
         else setError(1);
       } else {
-        // send to firebase
-        console.log(type + ", " + size + ", " + mouse);
         saveResponses(type, size, mouse);
         props.handler(false);
       }
@@ -35,13 +33,6 @@ export default function Alert(props) {
   const needResponses = async () => {
     const docSnap = await getDoc(props.session.ref);
     const data = docSnap.data();
-    console.log(data);
-    console.log("computer" in data);
-    console.log("size" in data);
-    console.log("mouse" in data);
-    console.log(
-      !("computer" in data) || !("size" in data) || !("mouse" in data)
-    );
     setNeedForm(
       !("computer" in data) || !("size" in data) || !("mouse" in data)
     );
@@ -58,11 +49,6 @@ export default function Alert(props) {
   useEffect(() => {
     if (props.open) needResponses();
   }, [props.open]);
-
-  // console.log(props.session.data());
-
-  // const needResponses =
-  //   !props.session.data().has("type") || !props.session.data().has("size");
 
   return (
     <div>

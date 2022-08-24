@@ -16,7 +16,7 @@ import {
 } from "../Firebase";
 import Confirmation from "./Confirmation";
 import { Timestamp } from "@firebase/firestore";
-import { Data } from "../helpers";
+import { Data, getWeeksDiff } from "../helpers";
 import Alert from "./Alert";
 
 // //sample images
@@ -156,30 +156,6 @@ const UploadWithProgressPreview = (props) => {
   const [realWidth, setRealWidth] = useState(0);
   const [realHeight, setRealHeight] = useState(0);
 
-  console.log(props.uid);
-  console.log(typeof props.uid);
-
-  //current sessionNum
-  const session2 = {
-    "3btOTajlticmVFQidUIsTnEZ2242": 2,
-    qmWgvdNnqSexrwyRBfSLC8UGo6u2: 2,
-    "0sYaMoKF0YOJOQJssDer6bniXbr1": 2,
-    "6DSqER3zZ4ba19Qomw6mWFEniIx2": 2,
-    "0ImyjtaP6kPc4d4yKRjcGifbWjc2": 2,
-    Wy0qtu2EQkg0d7yMkYme86WMrVB3: 2,
-    iShGLyyl2zc0cc6ZxC8XAFpcZbC2: 2,
-    QmPpDM3z8zZpSWKE4w35ZiJfaX63: 2,
-    e1oKg3ccwlQY4JBux6SH5XBvkuB2: 2,
-    vHRbuWXIvXOANcIIw1VgRWPBwPA3: 2,
-    eLNMQZ7NTCOoZEFsaeOuQbDqG8Z2: 2, //added late
-    TNhmQZeEQDbW4TPH78FV3v3gFy63: 2,
-    sBSSxV1PGKeMPd64MQTueGgXBWN2: 2,
-  };
-
-  console.log("Session 2? : " + props.uid in session2);
-  let currentSession = props.uid in session2 ? 2 : 1; //number 1 session
-
-  //index of current file
   const [fileIndex, setFileIndex] = useState(null);
 
   const [unsavedChanges, setunsavedChanges] = useState(false);
@@ -197,13 +173,14 @@ const UploadWithProgressPreview = (props) => {
   const [text, setText] = useState(props.instructions.greeting());
   props.instructions.displayText(setText); //enable Instructions object to display text
 
-  const loadSession = async () => {
+  const loadSession = async (currentSession = 1) => {
     let q = query(props.sessions, where("index", "==", currentSession));
     let snapshots = await getDocs(q);
     let retrievedSession = snapshots.docs[0];
     if (retrievedSession) {
-      //resume old session
-      console.log("Session ID: " + retrievedSession.id);
+      const data = retrievedSession.data();
+      if (data && data.end && getWeeksDiff(data.end.toDate(), Date.now()))
+        return await loadSession(2);
       setSession(retrievedSession);
       setIsAlert(true);
       setIsResuming(true);
@@ -216,7 +193,6 @@ const UploadWithProgressPreview = (props) => {
       });
       let createdSession = await getDoc(docRef);
       setSession(createdSession);
-      console.log("created session ID: " + createdSession.id);
       setIsAlert(true);
       setIsResuming(false);
       return createdSession.id;
@@ -229,32 +205,26 @@ const UploadWithProgressPreview = (props) => {
       "images/" + docKeys[fileNum] + "/sessions",
       sessionID
     );
-    console.log("file number: " + fileNum);
     setDataDoc(docRef);
     const docSnap = await getDoc(docRef);
     let data;
     if (docSnap.exists()) {
       let retrievedData = docSnap.data().data;
-      console.log("Document data:", retrievedData);
       if (!retrievedData) {
         data = new Data();
       } else {
         data = new Data(retrievedData);
       }
     } else {
-      // doc.data() will be undefined in this case
-      console.log("No such document!");
       data = new Data();
       await setDoc(docRef, { user: props.uid, data: null });
     }
-    console.log({ data });
     setSavedData(data);
     setIsComplete(data.isComplete);
   };
 
   const loadFile = async (fileNum) => {
     let sessionID;
-    console.log("load file");
     if (!session && props.sessions) {
       sessionID = await loadSession();
     } else {
@@ -272,7 +242,6 @@ const UploadWithProgressPreview = (props) => {
   }, [fileIndex]);
 
   const reset = () => {
-    console.log("Reset overlay");
     setItemNum(itemNum + 1);
   };
 
@@ -294,7 +263,6 @@ const UploadWithProgressPreview = (props) => {
     if (session == null) {
       text = "Begin Session";
       click = () => {
-        console.log("begin session");
         props.instructions.set("select level");
         loadFile(0);
       };
@@ -467,8 +435,8 @@ const UploadWithProgressPreview = (props) => {
                   open={isAlert}
                   title={
                     isResuming
-                      ? "Resuming Session " + currentSession
-                      : "Beginning Session " + currentSession
+                      ? "Resuming Session " + session.data().index
+                      : "Beginning Session " + session.data().index
                   }
                   handler={setIsAlert}
                 />

@@ -40,7 +40,6 @@ export default function Drawer(props) {
               props.unsaved
                 ? () => setConfirmation(true)
                 : () => {
-                    console.log("set file index to: " + index);
                     setState(false);
                     props.file(index);
                   }

@@ -124,7 +124,6 @@ export default class Overlay extends React.Component {
   }
 
   toggleLevel(level) {
-    console.log("toggle: " + level);
     if (!this.state.active) {
       if (this.state.currentLevel != -1) {
         this.data.setVert(this.state.currentLevel, [...this.state.points]);
@@ -621,8 +620,6 @@ export default class Overlay extends React.Component {
       index += splits[i] * 2;
     }
 
-    if (!valid) console.log("error: length of array is unexpected");
-
     return nestedArray;
   }
 
@@ -633,7 +630,6 @@ export default class Overlay extends React.Component {
     } else {
       save = this.data.array;
     }
-    console.log("to save: " + save);
     if (save) {
       try {
         await setDoc(
@@ -645,7 +641,6 @@ export default class Overlay extends React.Component {
         );
         this.props.edits(false);
         const data = this.data;
-        console.log({ data });
         this.props.isComplete(this.data.isComplete);
         this.setState({ saveTime: Date.now() });
       } catch (e) {
