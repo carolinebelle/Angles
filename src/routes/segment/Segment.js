@@ -81,7 +81,7 @@ function Segment() {
       images.map(async (i) => {
         try {
           const querySnapshot = await getDocs(
-            collection(db, `images2024/${i}/sessions`)
+            collection(db, `images2024/${i}/sessions2024`)
           );
           querySnapshot.forEach((doc) => {
             // doc.data() is never undefined for query doc snapshots
@@ -200,7 +200,7 @@ function Segment() {
         <UploadImage
           uid={uid}
           instructions={instructions}
-          sessions={collection(db, "users/" + uid + "/sessions")}
+          sessions={collection(db, "users/" + uid + "/sessions2024")}
           officialImages={officialImages}
         />
         {admin ? (
