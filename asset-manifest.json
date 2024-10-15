@@ -1,36 +1,25 @@
 {
   "files": {
     "main.css": "/static/css/main.7f6a7906.css",
-    "main.js": "/static/js/main.e9b96692.js",
-    "static/media/f6198cca-b03c-431c-9ba2-445470a15c54.png": "/static/media/f6198cca-b03c-431c-9ba2-445470a15c54.3ebf4adc62fa2406499c.png",
-    "static/media/f983cf99-7aaf-4f16-b2be-58ba83770755.png": "/static/media/f983cf99-7aaf-4f16-b2be-58ba83770755.b9e659885eae7815e2bd.png",
-    "static/media/49f9e813-66bf-46e1-a0d9-45e658398f4a.png": "/static/media/49f9e813-66bf-46e1-a0d9-45e658398f4a.7916d94fd367d7fb2ebc.png",
-    "static/media/ac99a706-6115-419d-b27b-5dac8ebca73c.png": "/static/media/ac99a706-6115-419d-b27b-5dac8ebca73c.9465ebab4a0b724438c2.png",
-    "static/media/3546267a-20dc-432e-aad6-736f1d11b3dd.png": "/static/media/3546267a-20dc-432e-aad6-736f1d11b3dd.8a545c9223fbe09df80b.png",
-    "static/media/69c34174-48a2-4014-9696-7ad97bf05686.png": "/static/media/69c34174-48a2-4014-9696-7ad97bf05686.9d8c3398c5f30ae92c27.png",
-    "static/media/4e0255c7-1a07-4840-9120-660faf66fa13.png": "/static/media/4e0255c7-1a07-4840-9120-660faf66fa13.a49529ed09da6767e946.png",
-    "static/media/efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a.png": "/static/media/efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a.f80275d100bf2bd88eec.png",
-    "static/media/19c4762b-25a3-4f75-9289-70c5ea396271.png": "/static/media/19c4762b-25a3-4f75-9289-70c5ea396271.75ddbd951682343f65f0.png",
-    "static/media/d03d9a81-464e-4180-a12e-828c4594d066.png": "/static/media/d03d9a81-464e-4180-a12e-828c4594d066.0c3a58c45ef8a5325ca7.png",
-    "static/media/3147ba94-28ec-4420-9412-2c203b7c759d.png": "/static/media/3147ba94-28ec-4420-9412-2c203b7c759d.99195b68060473ff1f3c.png",
-    "static/media/09d6d661-5c96-475f-84fc-a396f7dbf751.png": "/static/media/09d6d661-5c96-475f-84fc-a396f7dbf751.5f62ee8d5530d54f9a6b.png",
-    "static/media/31e885e5-5267-44b5-aa66-843b2754f549.png": "/static/media/31e885e5-5267-44b5-aa66-843b2754f549.dba92ca12bb7690e6ad8.png",
-    "static/media/e59efe16-df24-4d9e-b8e1-0848880cc200.png": "/static/media/e59efe16-df24-4d9e-b8e1-0848880cc200.1594567f7b3fc0fbe352.png",
-    "static/media/c4f8667e-7d92-4cbf-9485-8a146834a1bc.png": "/static/media/c4f8667e-7d92-4cbf-9485-8a146834a1bc.6f1cb22f9d6ba5f2e418.png",
-    "static/media/1cfe0593-7a26-483f-afb4-a304387971f2.png": "/static/media/1cfe0593-7a26-483f-afb4-a304387971f2.089980ac6afcaaaa3ddc.png",
-    "static/media/ced9c518-4815-4e8f-b6db-f6bd8a73b675.png": "/static/media/ced9c518-4815-4e8f-b6db-f6bd8a73b675.36be5899e13ec378224b.png",
-    "static/media/9b5b6e19-1eef-4dde-a176-777bd4d1b216.png": "/static/media/9b5b6e19-1eef-4dde-a176-777bd4d1b216.5e6313265f4330e13894.png",
-    "static/media/a9ba5695-4d0f-4878-8ac7-57307d41a6f4.png": "/static/media/a9ba5695-4d0f-4878-8ac7-57307d41a6f4.fd12a5ebcc75b223d80b.png",
-    "static/media/9e8a4fb5-c624-40d1-9659-b2bd4da44c4f.png": "/static/media/9e8a4fb5-c624-40d1-9659-b2bd4da44c4f.9c086b3fb4b126ac430b.png",
-    "static/media/7854ec4b-85f2-4e9c-8235-a16fc6111065.png": "/static/media/7854ec4b-85f2-4e9c-8235-a16fc6111065.e65c91f8c889bc03d53f.png",
-    "static/media/d70e08df-2a7b-4d8c-a290-3cff5f137346.png": "/static/media/d70e08df-2a7b-4d8c-a290-3cff5f137346.ad6beba8a0c144b1c5ec.png",
-    "static/media/e76df50f-60e2-419c-87bc-3806b3343afd.png": "/static/media/e76df50f-60e2-419c-87bc-3806b3343afd.16955fcea3d967d0c07b.png",
+    "main.js": "/static/js/main.e7d0fc1b.js",
+    "static/media/PriorPSF2_Lat.png": "/static/media/PriorPSF2_Lat.2556d8bfd25f8946b116.png",
+    "static/media/DLS1_Lat.png": "/static/media/DLS1_Lat.fb64ed48cfd536f96094.png",
+    "static/media/Spondy2_Lat.png": "/static/media/Spondy2_Lat.eabd6255ea41201a3ff1.png",
+    "static/media/Degenspondy1_Lat.png": "/static/media/Degenspondy1_Lat.ea9d4f9855095652166b.png",
+    "static/media/Normal2_L.png": "/static/media/Normal2_L.1993e386cb55eb8033ef.png",
+    "static/media/Spondy1_Lat.png": "/static/media/Spondy1_Lat.fb79ba2107ac90f670a3.png",
+    "static/media/PriorPSF1_Lat.png": "/static/media/PriorPSF1_Lat.068f3b7aa1bf5503635d.png",
+    "static/media/Normal1_L.png": "/static/media/Normal1_L.0ee383e8fb2b2d5631fa.png",
+    "static/media/PriorTLIF1_Lat.png": "/static/media/PriorTLIF1_Lat.55b21c6150a97417efa7.png",
+    "static/media/PriorTLIF2_Lat.png": "/static/media/PriorTLIF2_Lat.70c8d849b921447f0407.png",
+    "static/media/Degenspondy2_Lat.png": "/static/media/Degenspondy2_Lat.2e2cbd50ca2aba54ec46.png",
+    "static/media/DLS2_Lat.png": "/static/media/DLS2_Lat.7feea491c81c481f6f19.png",
     "index.html": "/index.html",
     "main.7f6a7906.css.map": "/static/css/main.7f6a7906.css.map",
-    "main.e9b96692.js.map": "/static/js/main.e9b96692.js.map"
+    "main.e7d0fc1b.js.map": "/static/js/main.e7d0fc1b.js.map"
   },
   "entrypoints": [
     "static/css/main.7f6a7906.css",
-    "static/js/main.e9b96692.js"
+    "static/js/main.e7d0fc1b.js"
   ]
 }
