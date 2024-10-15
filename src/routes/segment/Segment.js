@@ -52,7 +52,7 @@ function Segment() {
   const firebaseUser = async (userID) => {
     const instr = new Instructions();
     try {
-      const uRef = doc(db, "users", userID);
+      const uRef = doc(db, "users2024", userID);
       const uDoc = await getDoc(uRef);
       const data = uDoc.data();
 
@@ -120,12 +120,12 @@ function Segment() {
     arr.push(headings);
 
     try {
-      const querySnapshot = await getDocs(collection(db, `users`));
+      const querySnapshot = await getDocs(collection(db, `users2024`));
       await Promise.all(
         querySnapshot.docs.map(async (doc) => {
           try {
             const subcollectionSnapshot = await getDocs(
-              collection(db, `users/${doc.id}/sessions2024`)
+              collection(db, `users2024/${doc.id}/sessions2024`)
             );
             subcollectionSnapshot.forEach((session) => {
               // doc.data() is never undefined for query doc snapshots
@@ -200,7 +200,7 @@ function Segment() {
         <UploadImage
           uid={uid}
           instructions={instructions}
-          sessions={collection(db, "users/" + uid + "/sessions2024")}
+          sessions={collection(db, "users2024/" + uid + "/sessions2024")}
           officialImages={officialImages}
         />
         {admin ? (
