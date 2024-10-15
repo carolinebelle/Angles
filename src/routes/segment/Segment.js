@@ -200,7 +200,7 @@ function Segment() {
         <UploadImage
           uid={uid}
           instructions={instructions}
-          sessions={collection(db, "users/" + uid + "/sessions")}
+          sessions={collection(db, "new_users/" + uid + "/sessions")}
           officialImages={officialImages}
         />
         {admin ? (
