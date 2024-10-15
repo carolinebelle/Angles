@@ -120,7 +120,7 @@ function Segment() {
     arr.push(headings);
 
     try {
-      const querySnapshot = await getDocs(collection(db, `new_users`));
+      const querySnapshot = await getDocs(collection(db, `users`));
       await Promise.all(
         querySnapshot.docs.map(async (doc) => {
           try {
@@ -200,7 +200,7 @@ function Segment() {
         <UploadImage
           uid={uid}
           instructions={instructions}
-          sessions={collection(db, "new_users/" + uid + "/sessions")}
+          sessions={collection(db, "users/" + uid + "/sessions")}
           officialImages={officialImages}
         />
         {admin ? (
