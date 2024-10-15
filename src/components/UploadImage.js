@@ -24,7 +24,8 @@ import Alert from "./Alert";
 // import sample1 from "../images/sample2.jpeg";
 // import sample2 from "../images/sample3.png";
 
-//real images
+/*
+//real images - old
 import image0 from "../images/09d6d661-5c96-475f-84fc-a396f7dbf751.png";
 import image1 from "../images/19c4762b-25a3-4f75-9289-70c5ea396271.png";
 import image2 from "../images/1cfe0593-7a26-483f-afb4-a304387971f2.png";
@@ -110,6 +111,53 @@ const docKeys = [
   "efe2ce5c-0fd2-42cd-98d6-4f88ce290d2a",
   "f6198cca-b03c-431c-9ba2-445470a15c54",
   "f983cf99-7aaf-4f16-b2be-58ba83770755",
+];
+*/
+
+//images 2024
+import image0 from "../images2024/Degenspondy1_Lat.png"
+import image1 from "../images2024/Degenspondy2_Lat.png"
+import image2 from "../images2024/DLS1_Lat.png"
+import image3 from "../images2024/DLS2_Lat.png"
+import image4 from "../images2024/Normal1_L.png"
+import image5 from "../images2024/Normal2_L.png"
+import image6 from "../images2024/PriorPSF1_Lat.png"
+import image7 from "../images2024/PriorPSF2_Lat.png"
+import image8 from "../images2024/PriorTLIF1_Lat.png"
+import image9 from "../images2024/PriorTLIF2_Lat.png"
+import image10 from "../images2024/Spondy1_Lat.png"
+import image11 from "../images2024/Spondy2_Lat.png"
+
+const n = 12;
+
+const images = [
+  image0,
+  image1,
+  image2,
+  image3,
+  image4,
+  image5,
+  image6,
+  image7,
+  image8,
+  image9,
+  image10,
+  image11,
+];
+
+const docKeys = [
+  "Degenspondy1_Lat",
+  "Degenspondy2_Lat",
+  "DLS1_Lat",
+  "DLS2_Lat",
+  "Normal1_L",
+  "Normal2_L",
+  "PriorPSF1_Lat",
+  "PriorPSF2_Lat",
+  "PriorTLIF1_Lat",
+  "PriorTLIF2_Lat",
+  "Spondy1_Lat",
+  "Spondy2_Lat",
 ];
 
 const CustomImagePreview = ({ file, handler, scaler }) => {
