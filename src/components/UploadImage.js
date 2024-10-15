@@ -250,7 +250,7 @@ const UploadWithProgressPreview = (props) => {
   const retrieveData = async (fileNum, sessionID) => {
     const docRef = doc(
       db,
-      "images/" + docKeys[fileNum] + "/sessions",
+      "images2024/" + docKeys[fileNum] + "/sessions2024",
       sessionID
     );
     setDataDoc(docRef);
