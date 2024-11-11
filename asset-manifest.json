@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.7f6a7906.css",
-    "main.js": "/static/js/main.0d1eb78d.js",
+    "main.js": "/static/js/main.14143c5a.js",
     "static/media/PriorPSF2_Lat.png": "/static/media/PriorPSF2_Lat.2556d8bfd25f8946b116.png",
     "static/media/DLS1_Lat.png": "/static/media/DLS1_Lat.fb64ed48cfd536f96094.png",
     "static/media/Spondy2_Lat.png": "/static/media/Spondy2_Lat.eabd6255ea41201a3ff1.png",
@@ -16,10 +16,10 @@
     "static/media/DLS2_Lat.png": "/static/media/DLS2_Lat.7feea491c81c481f6f19.png",
     "index.html": "/index.html",
     "main.7f6a7906.css.map": "/static/css/main.7f6a7906.css.map",
-    "main.0d1eb78d.js.map": "/static/js/main.0d1eb78d.js.map"
+    "main.14143c5a.js.map": "/static/js/main.14143c5a.js.map"
   },
   "entrypoints": [
     "static/css/main.7f6a7906.css",
-    "static/js/main.0d1eb78d.js"
+    "static/js/main.14143c5a.js"
   ]
 }
