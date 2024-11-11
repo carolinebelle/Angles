@@ -68,42 +68,15 @@ function Segment() {
     setInstructions(instr);
   };
 
-  const organizeVertebraData = (data) => {
-    let organizedData = [];
-  
-    // Process each vertebra in reverse order to ensure highest to lowest (L1 to S1).
-    for (let v = data.length - 8; v >= 0; v -= 8) {
-      const vertebraPoints = data.slice(v, v + 8);
-  
-      // Separate points into two lines
-      let topLine = vertebraPoints.slice(0, 4);
-      let bottomLine = vertebraPoints.slice(4, 8);
-  
-      // Sort top and bottom lines by x-coordinate to ensure left-to-right order
-      topLine.sort((a, b) => a[0] - b[0]);
-      bottomLine.sort((a, b) => a[0] - b[0]);
-  
-      // Ensure the top line has higher y-values than the bottom line
-      if (topLine[0][1] < bottomLine[0][1]) {
-        // Swap lines if necessary
-        [topLine, bottomLine] = [bottomLine, topLine];
-      }
-  
-      // Add the organized points for the current vertebra to the overall organizedData
-      organizedData.push(...topLine, ...bottomLine);
-    }
-  
-    return organizedData;
-  };
-  
   const imageData = async () => {
+    // columns: "imageID", "sessionID", [0,47], "userID"
     let arr = [];
     let headings = ["imageID", "sessionID", "userID"];
     for (let i = 0; i < 48; i++) {
       headings.push(i);
     }
     arr.push(headings);
-  
+
     await Promise.all(
       images.map(async (i) => {
         try {
@@ -111,11 +84,10 @@ function Segment() {
             collection(db, `images2024/${i}/sessions2024`)
           );
           querySnapshot.forEach((doc) => {
+            // doc.data() is never undefined for query doc snapshots
             let row = [i, doc.id, doc.data().user];
             if (doc.data().data) {
-              // Organize data within each vertebra, ordered highest to lowest
-              let organizedData = organizeVertebraData(doc.data().data);
-              row = row.concat(organizedData);
+              row = row.concat(doc.data().data);
             }
             arr.push(row);
           });
