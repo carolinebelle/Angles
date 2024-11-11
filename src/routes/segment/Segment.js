@@ -69,25 +69,42 @@ function Segment() {
   };
 
   const imageData = async () => {
-    // columns: "imageID", "sessionID", [0,47], "userID"
     let arr = [];
     let headings = ["imageID", "sessionID", "userID"];
     for (let i = 0; i < 48; i++) {
       headings.push(i);
     }
     arr.push(headings);
-
+  
     await Promise.all(
-      images.map(async (i) => {
+      images.map(async (imageID) => {
         try {
           const querySnapshot = await getDocs(
-            collection(db, `images2024/${i}/sessions2024`)
+            collection(db, `images2024/${imageID}/sessions2024`)
           );
           querySnapshot.forEach((doc) => {
-            // doc.data() is never undefined for query doc snapshots
-            let row = [i, doc.id, doc.data().user];
-            if (doc.data().data) {
-              row = row.concat(doc.data().data);
+            let row = [imageID, doc.id, doc.data().user];
+            let dataPoints = doc.data().data;
+  
+            if (dataPoints) {
+              // Organize dataPoints based on vertebra and points ordering rules
+              let organizedData = [];
+              for (let v = 0; v < 6; v++) {
+                let vertebraPoints = dataPoints.slice(v * 8, (v + 1) * 8);
+  
+                // Separate top and bottom lines of the vertebra
+                let topLine = vertebraPoints.slice(0, 4).sort((a, b) => a[0] - b[0]); // Lower x to higher x
+                let bottomLine = vertebraPoints.slice(4, 8).sort((a, b) => a[0] - b[0]); // Lower x to higher x
+  
+                // Ensure top line has higher y values than the bottom line
+                if (topLine[0][1] < bottomLine[0][1]) {
+                  [topLine, bottomLine] = [bottomLine, topLine];
+                }
+  
+                // Add organized vertebra points to organizedData
+                organizedData = organizedData.concat(topLine, bottomLine);
+              }
+              row = row.concat(organizedData.flat());
             }
             arr.push(row);
           });
